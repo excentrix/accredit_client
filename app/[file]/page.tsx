@@ -1,11 +1,16 @@
+"use client";
+
 import { MenuPanel } from "@/components/menuPanel";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { usePathname } from "next/navigation";
 
-export default function Home() {
+export default function Page() {
+  const pathname = usePathname();
+
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel defaultSize={25} minSize={20} maxSize={30}>
@@ -13,10 +18,7 @@ export default function Home() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={75}>
-        <main>
-          <h1>Dashboard Main Content</h1>
-          {/* Add your dashboard content here */}
-        </main>
+        <main>{pathname}</main>
       </ResizablePanel>
     </ResizablePanelGroup>
   );

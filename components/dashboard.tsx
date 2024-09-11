@@ -1,19 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  AlertCircle,
-  Archive,
-  ArchiveX,
-  File,
-  Inbox,
-  MessagesSquare,
-  Search,
-  Send,
-  ShoppingCart,
-  Trash2,
-  Users2,
-} from "lucide-react";
+import { File, Inbox, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -25,26 +13,27 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AccountSwitcher } from "@/components/account-switcher";
+// import { AccountSwitcher } from "@/components/account-switcher";
 import { Nav } from "@/components/nav";
+import Main from "./main";
 
-interface MailProps {
-  accounts: {
-    label: string;
-    email: string;
-    icon: React.ReactNode;
-  }[];
+interface DashProps {
+  // accounts: {
+  //   label: string;
+  //   email: string;
+  //   icon: React.ReactNode;
+  // }[];
   defaultLayout: number[] | undefined;
   defaultCollapsed?: boolean;
   navCollapsedSize: number;
 }
 
-export function Mail({
-  accounts,
+export function Dashboard({
+  // accounts,
   defaultLayout = [20, 25, 40],
   defaultCollapsed = false,
   navCollapsedSize,
-}: MailProps) {
+}: DashProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
 
   return (
@@ -87,47 +76,19 @@ export function Mail({
               isCollapsed ? "h-[52px]" : "px-2"
             )}
           >
-            <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />
+            {/* <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />  */}
+            <span className="tracking-widest text-xl font-semibold">NAAC</span>
           </div>
           <Separator />
           <Nav
             isCollapsed={isCollapsed}
             links={[
               {
-                title: "Inbox",
-                label: "128",
+                title: "Dashboard",
+                // label: "128",
                 icon: Inbox,
                 variant: "default",
-              },
-              {
-                title: "Drafts",
-                label: "9",
-                icon: File,
-                variant: "ghost",
-              },
-              {
-                title: "Sent",
-                label: "",
-                icon: Send,
-                variant: "ghost",
-              },
-              {
-                title: "Junk",
-                label: "23",
-                icon: ArchiveX,
-                variant: "ghost",
-              },
-              {
-                title: "Trash",
-                label: "",
-                icon: Trash2,
-                variant: "ghost",
-              },
-              {
-                title: "Archive",
-                label: "",
-                icon: Archive,
-                variant: "ghost",
+                url: '/'
               },
             ]}
           />
@@ -136,34 +97,11 @@ export function Mail({
             isCollapsed={isCollapsed}
             links={[
               {
-                title: "Social",
-                label: "972",
-                icon: Users2,
+                title: "Data Management",
+                // label: "972",
+                icon: File,
                 variant: "ghost",
-              },
-              {
-                title: "Updates",
-                label: "342",
-                icon: AlertCircle,
-                variant: "ghost",
-              },
-              {
-                title: "Forums",
-                label: "128",
-                icon: MessagesSquare,
-                variant: "ghost",
-              },
-              {
-                title: "Shopping",
-                label: "8",
-                icon: ShoppingCart,
-                variant: "ghost",
-              },
-              {
-                title: "Promotions",
-                label: "21",
-                icon: Archive,
-                variant: "ghost",
+                url: '/data-management'
               },
             ]}
           />
@@ -172,7 +110,7 @@ export function Mail({
         <ResizablePanel
           defaultSize={defaultLayout[1]}
           minSize={20}
-            maxSize={30}
+          maxSize={30}
         >
           <Tabs defaultValue="all">
             <div className="flex items-center px-4 py-2">
@@ -210,7 +148,9 @@ export function Mail({
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[2]}>asdasd</ResizablePanel>
+        <ResizablePanel defaultSize={defaultLayout[2]}>
+          <Main />
+        </ResizablePanel>
       </ResizablePanelGroup>
     </TooltipProvider>
   );
