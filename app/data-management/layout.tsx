@@ -1,3 +1,4 @@
+import { Layout } from "@/components/layout";
 import { MenuPanel } from "@/components/menuPanel";
 import {
   ResizableHandle,
@@ -5,19 +6,18 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-export default function Home() {
+export default function DashboardLayout({
+  children, // will be a page or nested layout
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel defaultSize={25} minSize={20} maxSize={30}>
-        <MenuPanel title="Register" />
+        <MenuPanel title="Data Management" />
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={75}>
-        <main>
-          <h1>Dashboard Main Content</h1>
-          {/* Add your dashboard content here */}
-        </main>
-      </ResizablePanel>
+      <ResizablePanel defaultSize={75}>{children}</ResizablePanel>
     </ResizablePanelGroup>
   );
 }

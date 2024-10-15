@@ -55,7 +55,7 @@ const Sidebar = ({
         isCollapsed={isCollapsed}
         links={[
           {
-            title: "Dashboard",
+            title: "Register",
             // label: "128",
             icon: Inbox,
             variant: "default",

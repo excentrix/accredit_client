@@ -14,7 +14,7 @@ export default function Page() {
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel defaultSize={25} minSize={20} maxSize={30}>
-        <MenuPanel title="Dashboard" />
+        <MenuPanel title="Register" />
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={75}>

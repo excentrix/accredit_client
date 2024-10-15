@@ -74,7 +74,7 @@ export function Layout({
             isCollapsed={isCollapsed}
             links={[
               {
-                title: "Dashboard",
+                title: "Register",
                 icon: Inbox,
                 variant: "default",
                 url: "/",

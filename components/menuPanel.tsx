@@ -47,10 +47,35 @@ export function MenuPanel({ title }: MenuPanelProps) {
       <div className="w-full px-4">
         {filedata.map((file: any) => (
           <Link
-            href={
+            key={
               file.subsection
                 ? `/${file.section}.${file.subsection}`
                 : `/${file.section}`
+            }
+            replace={true}
+            href={
+              {
+                pathname:
+                  title === "Register"
+                    ? file.subsection
+                      ? `/${file.section}.${file.subsection}`
+                      : `/${file.section}`
+                    : title === "Data Management"
+                    ? file.subsection
+                      ? `/data-management/${file.section}.${file.subsection}`
+                      : `/data-management/${file.section}`
+                    : "",
+                query: { file: file.id },
+              }
+              // title === "Register"
+              //   ? file.subsection
+              //     ? `/${file.section}.${file.subsection}?id=${file.id}`
+              //     : `/${file.section}?id=${file.id}`
+              //   : title === "Data Management"
+              //   ? file.subsection
+              //     ? `data-management/${file.section}.${file.subsection}?id=${file.id}`
+              //     : `data-management/${file.section}?id=${file.id}`
+              //   : ""
             }
           >
             <Card key={file.section + file.subsection} className="p-4">
