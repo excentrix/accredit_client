@@ -14,19 +14,20 @@ import {
 } from "./ui/card";
 import { Badge } from "./ui/badge";
 import Link from "next/link";
+import { useAuth } from "@/context/use-auth-context";
 
 interface MenuPanelProps {
   title: string;
 }
 
 export function MenuPanel({ title }: MenuPanelProps) {
-  const [filedata, setFileData] = React.useState([]);
+  const { files, setFiles } = useAuth();
   useEffect(() => {
     fetch("http://127.0.0.1:8000/naac")
       .then((res) => res.json())
       .then((data: any) => {
         console.log(data);
-        setFileData(data);
+        setFiles(data);
       });
   }, [title]);
 
@@ -45,7 +46,7 @@ export function MenuPanel({ title }: MenuPanelProps) {
         </form>
       </div>
       <div className="w-full px-4">
-        {filedata.map((file: any) => (
+        {files.map((file: any) => (
           <Link
             key={
               file.subsection
@@ -58,8 +59,8 @@ export function MenuPanel({ title }: MenuPanelProps) {
                 pathname:
                   title === "Register"
                     ? file.subsection
-                      ? `/${file.section}.${file.subsection}`
-                      : `/${file.section}`
+                      ? `/register/${file.section}.${file.subsection}`
+                      : `/register/${file.section}`
                     : title === "Data Management"
                     ? file.subsection
                       ? `/data-management/${file.section}.${file.subsection}`

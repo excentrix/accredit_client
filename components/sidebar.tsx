@@ -59,7 +59,7 @@ const Sidebar = ({
             // label: "128",
             icon: Inbox,
             variant: "default",
-            url: "/",
+            url: "/register",
           },
         ]}
       />

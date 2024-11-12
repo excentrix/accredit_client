@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/context/use-auth-context";
+import DataEntry from "@/components/data-entry";
 import { MenuPanel } from "@/components/menuPanel";
 import {
   ResizableHandle,
@@ -9,7 +11,7 @@ import {
 import { usePathname } from "next/navigation";
 
 export default function Page() {
-  const pathname = usePathname();
+  const { files } = useAuth();
 
   return (
     <ResizablePanelGroup direction="horizontal">
@@ -18,7 +20,7 @@ export default function Page() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={75}>
-        <main>{pathname}</main>
+        <DataEntry files={files} />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

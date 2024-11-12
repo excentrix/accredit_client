@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import { Layout } from "@/components/layout";
+import { AuthContextProvider } from "../context/use-auth-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body
         className={`min-h-screen h-screen overflow-hidden flex flex-col ${inter.className}`}
       >
-        <Layout>{children}</Layout>
+        <AuthContextProvider>
+          <Layout>{children}</Layout>
+        </AuthContextProvider>
       </body>
     </html>
   );
