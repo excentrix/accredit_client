@@ -29,7 +29,7 @@ export function Layout({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <ResizablePanelGroup
+      {/* <ResizablePanelGroup
         direction="horizontal"
         onLayout={(sizes: number[]) => {
           document.cookie = `react-resizable-panels:layout=${JSON.stringify(
@@ -86,13 +86,14 @@ export function Layout({
                 url: "/data-management",
               },
             ]}
-          />
-        </ResizablePanel>
+          /> */}
+      {/* </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[1]}>
-          {children}
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        <ResizablePanel defaultSize={defaultLayout[1]}> */}
+
+      {children}
+      {/* </ResizablePanel> */}
+      {/* </ResizablePanelGroup> */}
     </TooltipProvider>
   );
 }

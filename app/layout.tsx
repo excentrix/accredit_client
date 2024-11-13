@@ -4,6 +4,8 @@ import "./globals.css";
 
 import { Layout } from "@/components/layout";
 import { AuthContextProvider } from "../context/use-auth-context";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,11 +21,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`min-h-screen h-screen overflow-hidden flex flex-col ${inter.className}`}
-      >
+      <body className={`w-full`}>
         <AuthContextProvider>
-          <Layout>{children}</Layout>
+          {/* <Layout>{children}</Layout> */}
+          <SidebarProvider
+            style={
+              {
+                "--sidebar-width": "600px",
+              } as React.CSSProperties
+            }
+          >
+            <AppSidebar title="ACCREDIT" />
+            {children}
+          </SidebarProvider>
         </AuthContextProvider>
       </body>
     </html>
