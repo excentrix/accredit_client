@@ -1,9 +1,18 @@
+// components/app-sidebar.tsx
 "use client";
 
 import * as React from "react";
-import { useEffect } from "react";
-import { Command, Search, FileText, Database } from "lucide-react";
-import { NavUser } from "@/components/nav-user";
+import { useEffect, useState } from "react";
+import {
+  Command,
+  Search,
+  FileText,
+  Database,
+  Users,
+  Settings,
+  Layout,
+  Loader2,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,6 +31,7 @@ import { useAuth } from "@/context/use-auth-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Template } from "@/types/template";
 
 const navItems = [
   {
@@ -39,9 +49,12 @@ const navItems = [
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
-  const { files, setFiles } = useAuth();
-  const { setOpen } = useSidebar();
+  const { user } = useAuth();
   const pathname = usePathname();
+  const [templates, setTemplates] = useState<Template[]>([]); // Initialize with empty array
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeItem, setActiveItem] = React.useState(
     navItems.find((item) => pathname.startsWith(item.path)) || navItems[0]
   );
@@ -53,14 +66,63 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     }
   }, [pathname]);
 
+  // Fetch templates
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/naac")
-      .then((res) => res.json())
-      .then((data: any) => {
-        console.log(data);
-        setFiles(data);
-      });
-  }, [activeItem]);
+    const fetchTemplates = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch("http://127.0.0.1:8000/api/templates/");
+        if (!response.ok) {
+          throw new Error("Failed to fetch templates");
+        }
+        const data = await response.json();
+        setTemplates(data || []); // Ensure we set an empty array if data is null/undefined
+      } catch (error) {
+        console.error("Failed to fetch templates:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to fetch templates"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
+  // Group templates by criteria
+  const groupedTemplates = React.useMemo(() => {
+    if (!templates.length) return {}; // Return empty object if no templates
+
+    return templates.reduce<Record<string, Template[]>>((acc, template) => {
+      // Extract criteria from template code (e.g., "1.1" from "1.1.1")
+      const criteria = template.code.split(".").slice(0, 2).join(".");
+      if (!acc[criteria]) {
+        acc[criteria] = [];
+      }
+      acc[criteria].push(template);
+      return acc;
+    }, {});
+  }, [templates]);
+
+  // Filter templates based on search query
+  const filteredTemplates = React.useMemo(() => {
+    if (!searchQuery) return groupedTemplates;
+
+    const filtered: Record<string, Template[]> = {};
+    Object.entries(groupedTemplates).forEach(([criteria, templatesGroup]) => {
+      const matchingTemplates = templatesGroup.filter(
+        (template) =>
+          template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          template.code.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      if (matchingTemplates.length > 0) {
+        filtered[criteria] = matchingTemplates;
+      }
+    });
+    return filtered;
+  }, [groupedTemplates, searchQuery]);
 
   return (
     <Sidebar
@@ -69,20 +131,17 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       {...props}
     >
       {/* First sidebar with navigation */}
-      <Sidebar
-        collapsible="none"
-        className="!w-[240px] border-r" // Increased width from calc value to fixed 240px
-      >
+      <Sidebar collapsible="none" className="!w-[240px] border-r">
         <SidebarHeader className="border-b p-4">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild className="md:h-8">
-                <a href="/" className="flex items-center gap-3">
+                <Link href="/dashboard" className="flex items-center gap-3">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <Command className="size-4" />
                   </div>
                   <span className="text-lg font-semibold">NAAC</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -121,7 +180,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         </SidebarContent>
       </Sidebar>
 
-      {/* Second sidebar with files list */}
+      {/* Second sidebar with templates list */}
       <Sidebar collapsible="none" className="hidden flex-1 md:flex">
         <SidebarHeader className="gap-3.5 border-b p-4">
           <div className="flex w-full items-center justify-between">
@@ -131,44 +190,67 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           </div>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search" className="pl-8" />
+            <Input
+              placeholder="Search templates..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarGroup className="px-4">
-            <SidebarGroupContent>
-              {files.map((file: any) => (
-                <Link
-                  key={
-                    file.subsection
-                      ? `/${file.section}.${file.subsection}`
-                      : `/${file.section}`
-                  }
-                  replace={true}
-                  href={{
-                    pathname:
-                      activeItem.title === "Register"
-                        ? file.subsection
-                          ? `/register/${file.section}.${file.subsection}`
-                          : `/register/${file.section}`
-                        : activeItem.title === "Data Management"
-                        ? file.subsection
-                          ? `/data-management/${file.section}.${file.subsection}`
-                          : `/data-management/${file.section}`
-                        : "",
-                    query: { file: file.id },
-                  }}
-                >
-                  <div className="flex items-center gap-4 border-b p-4 last:border-b-0 hover:bg-sidebar-accent">
-                    <Badge className="text-base tracking-wider">
-                      {file.section}
-                    </Badge>
-                    <span className="text-sm">{file.heading}</span>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-20">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 text-destructive">
+              <p>{error}</p>
+            </div>
+          ) : (
+            <SidebarGroup className="px-4">
+              <SidebarGroupContent>
+                {Object.entries(filteredTemplates).map(
+                  ([criteria, templatesGroup]) => (
+                    <div key={criteria} className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline" className="text-xs">
+                          Criteria {criteria}
+                        </Badge>
+                      </div>
+                      {templatesGroup.map((template) => (
+                        <Link
+                          key={template.id}
+                          href={{
+                            pathname: `${activeItem.path}/${template.code}`,
+                            query: { template: template.id },
+                          }}
+                        >
+                          <div className="flex items-center gap-4 border-b p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">
+                            <Badge className="text-base tracking-wider">
+                              {template.code}
+                            </Badge>
+                            <span className="text-sm line-clamp-2">
+                              {template.name}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )
+                )}
+                {Object.keys(filteredTemplates).length === 0 && !isLoading && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? (
+                      <p>No templates found matching your search.</p>
+                    ) : (
+                      <p>No templates available.</p>
+                    )}
                   </div>
-                </Link>
-              ))}
-            </SidebarGroupContent>
-          </SidebarGroup>
+                )}
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
         </SidebarContent>
       </Sidebar>
     </Sidebar>
