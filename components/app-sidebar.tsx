@@ -42,6 +42,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { NavUser } from "./nav-user";
 // import { AddTemplateForm } from "./addtemplateform";
 
 const navItems = [
@@ -161,7 +162,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <Command className="size-4" />
                   </div>
-                  <span className="text-lg font-semibold">NAAC</span>
+                  <span className="text-lg font-semibold">Accredit</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -199,6 +200,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarFooter className="p-4">
+          {/* ... footer content ... */}
+          <NavUser user={{ name: "", email: "", avatar: "" }} />
+        </SidebarFooter>
       </Sidebar>
 
       {/* Second sidebar with templates list */}
