@@ -9,18 +9,18 @@ export const ROUTES: Record<string, AppRoute> = {
     title: "Dashboard",
   },
   register: {
-    path: "/register",
+    path: "/data",
     permission: {
       roles: ["faculty", "iqac_director", "admin"],
     },
-    title: "Data Registration",
+    title: "Data",
   },
   dataManagement: {
-    path: "/data-management",
+    path: "/template-management",
     permission: {
       roles: ["iqac_director", "admin"],
     },
-    title: "Data Management",
+    title: "Template Management",
     description: "Manage and review department submissions",
   },
   templates: {

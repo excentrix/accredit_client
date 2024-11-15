@@ -46,14 +46,14 @@ import { Button } from "./ui/button";
 
 const navItems = [
   {
-    title: "Data Entry",
+    title: "Data",
     icon: FileText,
-    path: "/dashboard/register",
+    path: "/dashboard/data",
   },
   {
     title: "Template Management",
     icon: Database,
-    path: "/dashboard/data-management",
+    path: "/dashboard/template-management",
   },
 ];
 
@@ -229,7 +229,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                       {templatesGroup.map((template) => (
                         <Link
                           key={template.id}
-                          href={`/dashboard/register/${template.code}`}
+                          href={`/dashboard/data/${template.code}`}
                           className="block"
                         >
                           <div className="flex items-center gap-4 border-b p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">

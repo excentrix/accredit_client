@@ -59,12 +59,12 @@ export function MenuPanel({ title }: MenuPanelProps) {
                 pathname:
                   title === "Register"
                     ? file.subsection
-                      ? `/register/${file.section}.${file.subsection}`
-                      : `/register/${file.section}`
-                    : title === "Data Management"
+                      ? `/data/${file.section}.${file.subsection}`
+                      : `/data/${file.section}`
+                    : title === "template Management"
                     ? file.subsection
-                      ? `/data-management/${file.section}.${file.subsection}`
-                      : `/data-management/${file.section}`
+                      ? `/template-management/${file.section}.${file.subsection}`
+                      : `/template-management/${file.section}`
                     : "",
                 query: { file: file.id },
               }
