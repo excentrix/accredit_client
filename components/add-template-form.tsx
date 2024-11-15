@@ -1,7 +1,7 @@
 // components/templates/add-template-form.tsx
 "use client";
 
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -124,188 +124,244 @@ export function AddTemplateForm({
     },
   });
 
-  const columns: ColumnDef<Column>[] = [
-    {
-      id: "actions",
-      size: 30,
-      cell: ({ row }) => {
-        const rowIndex = row.index;
-        const totalRows = form.getValues("columns").length;
+  // Memoized Input Component
+  const MemoizedInput = memo(
+    ({
+      value,
+      onChange,
+      ...props
+    }: React.InputHTMLAttributes<HTMLInputElement>) => (
+      <Input value={value} onChange={onChange} {...props} />
+    )
+  );
 
-        return (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={rowIndex === 0}
-              onClick={() => moveColumn(rowIndex, "up")}
-            >
-              <ChevronUp className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={rowIndex === totalRows - 1}
-              onClick={() => moveColumn(rowIndex, "down")}
-            >
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "name",
-      header: "Name",
-      cell: ({ row }) => (
-        <FormField
-          control={form.control}
-          name={`columns.${row.index}.name`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input placeholder="Field name" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      ),
-    },
-    {
-      accessorKey: "display_name",
-      header: "Display Name",
-      cell: ({ row }) => (
-        <FormField
-          control={form.control}
-          name={`columns.${row.index}.display_name`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input placeholder="Display name" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      ),
-    },
-    {
-      accessorKey: "type",
-      header: "Type",
-      cell: ({ row }) => (
-        <FormField
-          control={form.control}
-          name={`columns.${row.index}.type`}
-          render={({ field }) => (
-            <FormItem>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {FIELD_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-      ),
-    },
-    {
-      accessorKey: "required",
-      header: "Required",
-      cell: ({ row }) => (
-        <FormField
-          control={form.control}
-          name={`columns.${row.index}.required`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      ),
-    },
-    {
-      accessorKey: "description",
-      header: "Description",
-      cell: ({ row }) => (
-        <FormField
-          control={form.control}
-          name={`columns.${row.index}.description`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input placeholder="Description" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      ),
-    },
-    {
-      accessorKey: "options",
-      header: "Options",
-      cell: ({ row }) => {
-        const type = form.watch(`columns.${row.index}.type`);
-        if (type !== "select") return null;
+  // Memoized Select Component
+  const MemoizedSelect = memo(
+    ({ value, onValueChange, children, ...props }: any) => (
+      <Select value={value} onValueChange={onValueChange} {...props}>
+        {children}
+      </Select>
+    )
+  );
 
-        return (
-          <FormField
-            control={form.control}
-            name={`columns.${row.index}.options`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Option1,Option2,..."
-                    value={field.value?.join(",") || ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean)
-                      )
-                    }
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        );
+  // Memoized Checkbox Component
+  const MemoizedCheckbox = memo(
+    ({ checked, onCheckedChange, ...props }: any) => (
+      <Checkbox
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        {...props}
+      />
+    )
+  );
+
+  const memoizedColumns = useMemo<ColumnDef<Column>[]>(
+    () => [
+      {
+        id: "actions",
+        size: 30,
+        cell: memo(({ row, table }: { row: any; table: any }) => {
+          const rowIndex = row.index;
+          const totalRows = form.getValues("columns").length;
+
+          return (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={rowIndex === 0}
+                onClick={() => moveColumn(rowIndex, "up")}
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={rowIndex === totalRows - 1}
+                onClick={() => moveColumn(rowIndex, "down")}
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        }),
       },
-    },
-    {
-      id: "delete",
-      size: 70,
-      cell: ({ row }) => (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => removeColumn(row.index)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      ),
-    },
-  ];
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: memo(({ row, table }: { row: any; table: any }) => {
+          const { form } = table.options.meta as { form: any };
+          return (
+            <FormField
+              control={form.control}
+              name={`columns.${row.index}.name`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <MemoizedInput {...field} placeholder="Field name" />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          );
+        }),
+      },
+      {
+        accessorKey: "display_name",
+        header: "Display Name",
+        cell: memo(({ row, table }: { row: any; table: any }) => {
+          const { form } = table.options.meta as { form: any };
+          return (
+            <FormField
+              control={form.control}
+              name={`columns.${row.index}.display_name`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <MemoizedInput {...field} placeholder="Display name" />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          );
+        }),
+      },
+      {
+        accessorKey: "type",
+        header: "Type",
+        cell: memo(({ row, table }: { row: any; table: any }) => {
+          const { form } = table.options.meta as { form: any };
+          return (
+            <FormField
+              control={form.control}
+              name={`columns.${row.index}.type`}
+              render={({ field }) => (
+                <FormItem>
+                  <MemoizedSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {FIELD_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </MemoizedSelect>
+                </FormItem>
+              )}
+            />
+          );
+        }),
+      },
+      {
+        accessorKey: "required",
+        header: "Required",
+        cell: memo(({ row, table }: { row: any; table: any }) => {
+          const { form } = table.options.meta as { form: any };
+          return (
+            <FormField
+              control={form.control}
+              name={`columns.${row.index}.required`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <MemoizedCheckbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          );
+        }),
+      },
+      {
+        accessorKey: "description",
+        header: "Description",
+        cell: memo(({ row, table }: { row: any; table: any }) => {
+          const { form } = table.options.meta as { form: any };
+          return (
+            <FormField
+              control={form.control}
+              name={`columns.${row.index}.description`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <MemoizedInput {...field} placeholder="Description" />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          );
+        }),
+      },
+      {
+        accessorKey: "options",
+        header: "Options",
+        cell: memo(({ row, table }: { row: any; table: any }) => {
+          const { form } = table.options.meta as { form: any };
+          const type = form.watch(`columns.${row.index}.type`);
+          if (type !== "select") return null;
+
+          return (
+            <FormField
+              control={form.control}
+              name={`columns.${row.index}.options`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <MemoizedInput
+                      placeholder="Option1,Option2,..."
+                      value={field.value?.join(",") || ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
+                        )
+                      }
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          );
+        }),
+      },
+      {
+        id: "delete",
+        size: 70,
+        cell: memo(({ row }: { row: any }) => (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => removeColumn(row.index)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )),
+      },
+    ],
+    []
+  );
 
   const table = useReactTable({
     data: form.watch("columns"),
-    columns,
+    columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      form,
+    },
   });
 
   const moveColumn = (index: number, direction: "up" | "down") => {
@@ -409,7 +465,7 @@ export function AddTemplateForm({
               <FormItem>
                 <FormLabel>Template Code *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 1.1.1" {...field} />
+                  <MemoizedInput placeholder="e.g., 1.1.1" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -423,7 +479,7 @@ export function AddTemplateForm({
               <FormItem>
                 <FormLabel>Template Name *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter template name" {...field} />
+                  <MemoizedInput placeholder="Enter template name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -540,7 +596,7 @@ export function AddTemplateForm({
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={columns.length}
+                      colSpan={memoizedColumns.length}
                       className="h-24 text-center"
                     >
                       No fields added

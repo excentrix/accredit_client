@@ -8,14 +8,11 @@ import {
   Search,
   FileText,
   Database,
-  Users,
-  Settings,
   Layout,
   Loader2,
   Plus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -27,34 +24,30 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronRight } from "lucide-react"
+import { ChevronRight } from "lucide-react";
 import { useAuth } from "@/context/use-auth-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Template } from "@/types/template";
-import api from "@/lib/api"; // Import the api instance
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
-import { Button } from "./ui/button";
+import api from "@/lib/api";
 import { NavUser } from "./nav-user";
-// import { AddTemplateForm } from "./addtemplateform";
 
-const navItems = [
+const mainNavItems = [
   {
-    title: "Data",
+    title: "Dashboard",
+    icon: Layout,
+    path: "/dashboard",
+  },
+  {
+    title: "Data Management",
     icon: FileText,
     path: "/dashboard/data",
   },
@@ -65,6 +58,27 @@ const navItems = [
   },
 ];
 
+const contextConfig = {
+  "/dashboard/data": {
+    title: "Data Entry",
+    showSearch: true,
+    showTemplates: true,
+    searchPlaceholder: "Search templates...",
+  },
+  "/dashboard/template-management": {
+    title: "Template Management",
+    showSearch: false,
+    showTemplates: false,
+    searchPlaceholder: "Search data...",
+  },
+  "/dashboard": {
+    title: "Dashboard",
+    showSearch: false,
+    showTemplates: false,
+    searchPlaceholder: "",
+  },
+};
+
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
@@ -74,58 +88,38 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeItem, setActiveItem] = React.useState(
-    navItems.find((item) => pathname.startsWith(item.path)) || navItems[0]
-  );
 
-  useEffect(() => {
-    const currentItem = navItems.find((item) => pathname.startsWith(item.path));
-    if (currentItem) {
-      setActiveItem(currentItem);
-    }
-  }, [pathname]);
+  const currentContext =
+    Object.entries(contextConfig).find(([path]) =>
+      pathname.startsWith(path)
+    )?.[1] || contextConfig["/dashboard"];
 
-  // Fetch templates with authorization
   useEffect(() => {
     const fetchTemplates = async () => {
+      if (!currentContext.showTemplates) return;
+
       try {
         setIsLoading(true);
         setError(null);
-
         const response = await api.get("/templates/");
-        console.log("Template response:", response.data); // Debug log
-
-        if (response.data) {
-          setTemplates(response.data);
-        } else {
-          throw new Error("No data received from server");
-        }
+        setTemplates(response.data);
       } catch (error) {
         console.error("Failed to fetch templates:", error);
-        const message =
-          error instanceof Error ? error.message : "Failed to fetch templates";
-        setError(message);
-        // toast({
-        //   title: "Error",
-        //   description: message,
-        //   variant: "destructive",
-        // });
+        setError(
+          error instanceof Error ? error.message : "Failed to fetch templates"
+        );
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (user) {
-      fetchTemplates();
-    }
-  }, [user]);
+    fetchTemplates();
+  }, [currentContext.showTemplates]);
 
-  // Group templates by criteria
   const groupedTemplates = React.useMemo(() => {
-    if (!templates.length) return {}; // Return empty object if no templates
+    if (!templates.length) return {};
 
     return templates.reduce<Record<string, Template[]>>((acc, template) => {
-      // Extract criteria from template code (e.g., "1.1" from "1.1.1")
       const criteria = template.code.split(".").slice(0, 2).join(".");
       if (!acc[criteria]) {
         acc[criteria] = [];
@@ -135,7 +129,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     }, {});
   }, [templates]);
 
-  // Filter templates based on search query
   const filteredTemplates = React.useMemo(() => {
     if (!searchQuery) return groupedTemplates;
 
@@ -153,13 +146,91 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     return filtered;
   }, [groupedTemplates, searchQuery]);
 
+  const renderSecondaryContent = () => {
+    if (!currentContext.showTemplates) return null;
+
+    return (
+      <>
+        {currentContext.showSearch && (
+          <div className="p-4">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={currentContext.searchPlaceholder} 
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+        <SidebarContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-20">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 text-destructive">
+              <p>{error}</p>
+            </div>
+          ) : (
+            <>
+              {Object.entries(filteredTemplates).map(
+                ([criteria, templatesGroup]) => (
+                  <Collapsible
+                    key={criteria}
+                    defaultOpen
+                    className="group/collapsible"
+                  >
+                    <SidebarGroup>
+                      <SidebarGroupLabel className="px-4 hover:bg-sidebar-accent rounded-lg">
+                        <CollapsibleTrigger className="flex w-full items-center">
+                          <h3 className="text-sm font-semibold text-secondary">
+                            Criteria {criteria}
+                          </h3>
+                          <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                        </CollapsibleTrigger>
+                      </SidebarGroupLabel>
+                      <CollapsibleContent>
+                        {templatesGroup.map((template) => (
+                          <Link
+                            key={template.id}
+                            href={
+                              pathname.startsWith("/dashboard/data")
+                                ? `/dashboard/data/${template.code}`
+                                : `/dashboard/template-management/${template.code}`
+                            }
+                            className="block"
+                          >
+                            <div className="flex w-full justify-between gap-4 border-b pl-6 p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">
+                              <span className="text-sm line-clamp-2">
+                                {template.name}
+                              </span>
+                              <span className="text-sm line-clamp-2">
+                                {template.code}
+                              </span>
+                            </div>
+                          </Link>
+                        ))}
+                      </CollapsibleContent>
+                    </SidebarGroup>
+                  </Collapsible>
+                )
+              )}
+            </>
+          )}
+        </SidebarContent>
+      </>
+    );
+  };
+
   return (
     <Sidebar
       collapsible="icon"
       className="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
       {...props}
     >
-      {/* First sidebar with navigation */}
+      {/* Primary Sidebar */}
       <Sidebar collapsible="none" className="!w-[240px] border-r">
         <SidebarHeader className="border-b p-4">
           <SidebarMenu>
@@ -179,7 +250,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           <SidebarGroup>
             <SidebarGroupContent className="p-2">
               <SidebarMenu>
-                {navItems.map((item) => (
+                {mainNavItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <Link href={item.path} className="w-full">
                       <SidebarMenuButton
@@ -208,70 +279,30 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="p-4">
-          {/* ... footer content ... */}
-          <NavUser user={{ name: "", email: "", avatar: "" }} />
+          <NavUser
+            user={{
+              name: "Sid karthik",
+              email: "sid@test.com",
+              avatar: "admin",
+            }}
+          />
         </SidebarFooter>
       </Sidebar>
 
-      {/* Second sidebar with templates list */}
-      <Sidebar collapsible="none" className="hidden flex-1 md:flex">
-        <SidebarHeader className="gap-4 border-b p-4 text-lg font-semibold ">
-          {navItems.find((item) => pathname.startsWith(item.path))?.title}
+      {/* Secondary Sidebar */}
+      <Sidebar
+        collapsible="none"
+        className={cn(
+          "hidden md:flex flex-1",
+          "transition-[flex-basis,width] motion-reduce:transition-none",
+          "[&:has([data-collapsed=true])]:basis-[var(--collapsed-width)]",
+          "[&:has([data-collapsed=true])]:min-w-[var(--collapsed-width)]"
+        )}
+      >
+        <SidebarHeader className="border-b p-4">
+          <h2 className="text-lg font-semibold">{currentContext.title}</h2>
         </SidebarHeader>
-        <SidebarContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-20">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : error ? (
-            <div className="text-center py-8 text-destructive">
-              <p>{error}</p>
-            </div>
-          ) : (
-            <>
-              {Object.entries(filteredTemplates).map(([criteria, templatesGroup]) => (
-                <Collapsible
-                  key={criteria}
-                  title={criteria}
-                  defaultOpen
-                  className="group/collapsible"
-                >
-                  <SidebarGroup>
-                    <SidebarGroupLabel className="px-4 hover:bg-sidebar-accent rounded-lg">
-                      <CollapsibleTrigger className="flex w-full">
-                          <h3 className="text-sm font-semibold text-secondary">
-                            Criteria {criteria}
-                          </h3>
-                        <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                      </CollapsibleTrigger>
-                    </SidebarGroupLabel>
-                    <CollapsibleContent>
-                      {templatesGroup.map((template) => (
-                        <Link
-                          key={template.id}
-                          href={`/dashboard/data/${template.code}`}
-                          className="block"
-                        >
-                          <div className="flex w-full justify-between gap-4 border-b pl-6 p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">
-                            {/* <Badge className="text-base tracking-wider">
-                              {template.code}
-                            </Badge> */}
-                            <span className="text-sm line-clamp-2">
-                              {template.name}
-                            </span>
-                            <span className="text-sm line-clamp-2">
-                              {template.code}
-                            </span>
-                          </div>
-                        </Link>
-                      ))}
-                    </CollapsibleContent>
-                  </SidebarGroup>
-                </Collapsible>
-              ))}
-            </>
-          )}
-        </SidebarContent>
+        {renderSecondaryContent()}
       </Sidebar>
     </Sidebar>
   );

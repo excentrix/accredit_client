@@ -40,7 +40,7 @@ export default function LoginPage() {
 
   // If already authenticated, don't show login form
   if (isAuthenticated) {
-    router.replace("/dashboard");
+    return null;
   }
 
   return (
