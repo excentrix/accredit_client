@@ -22,12 +22,19 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronRight } from "lucide-react"
 import { useAuth } from "@/context/use-auth-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -208,8 +215,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
 
       {/* Second sidebar with templates list */}
       <Sidebar collapsible="none" className="hidden flex-1 md:flex">
-        <SidebarHeader className="gap-3.5 border-b p-4">
-          {/* ... header content ... */}
+        <SidebarHeader className="gap-4 border-b p-4 text-lg font-semibold ">
+          {navItems.find((item) => pathname.startsWith(item.path))?.title}
         </SidebarHeader>
         <SidebarContent>
           {isLoading ? (
@@ -221,46 +228,48 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
               <p>{error}</p>
             </div>
           ) : (
-            <SidebarGroup className="px-4">
-              <SidebarGroupContent>
-                {Object.entries(filteredTemplates).map(
-                  ([criteria, templatesGroup]) => (
-                    <div key={criteria} className="mb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="text-xs">
-                          Criteria {criteria}
-                        </Badge>
-                      </div>
+            <>
+              {Object.entries(filteredTemplates).map(([criteria, templatesGroup]) => (
+                <Collapsible
+                  key={criteria}
+                  title={criteria}
+                  defaultOpen
+                  className="group/collapsible"
+                >
+                  <SidebarGroup>
+                    <SidebarGroupLabel className="px-4 hover:bg-sidebar-accent rounded-lg">
+                      <CollapsibleTrigger className="flex w-full">
+                          <h3 className="text-sm font-semibold text-secondary">
+                            Criteria {criteria}
+                          </h3>
+                        <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                      </CollapsibleTrigger>
+                    </SidebarGroupLabel>
+                    <CollapsibleContent>
                       {templatesGroup.map((template) => (
                         <Link
                           key={template.id}
                           href={`/dashboard/data/${template.code}`}
                           className="block"
                         >
-                          <div className="flex items-center gap-4 border-b p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">
-                            <Badge className="text-base tracking-wider">
+                          <div className="flex w-full justify-between gap-4 border-b pl-6 p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">
+                            {/* <Badge className="text-base tracking-wider">
                               {template.code}
-                            </Badge>
+                            </Badge> */}
                             <span className="text-sm line-clamp-2">
                               {template.name}
+                            </span>
+                            <span className="text-sm line-clamp-2">
+                              {template.code}
                             </span>
                           </div>
                         </Link>
                       ))}
-                    </div>
-                  )
-                )}
-                {Object.keys(filteredTemplates).length === 0 && !isLoading && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {searchQuery ? (
-                      <p>No templates found matching your search.</p>
-                    ) : (
-                      <p>No templates available.</p>
-                    )}
-                  </div>
-                )}
-              </SidebarGroupContent>
-            </SidebarGroup>
+                    </CollapsibleContent>
+                  </SidebarGroup>
+                </Collapsible>
+              ))}
+            </>
           )}
         </SidebarContent>
       </Sidebar>
