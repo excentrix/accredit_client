@@ -48,6 +48,8 @@ import {
 } from "@tanstack/react-table";
 import api from "@/lib/api";
 
+import { useRouter } from "next/navigation";
+
 const templateSchema = z.object({
   code: z
     .string()
@@ -99,6 +101,7 @@ export function AddTemplateForm({
   onSuccess,
 }: AddTemplateFormProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof templateSchema>>({
@@ -550,6 +553,13 @@ export function AddTemplateForm({
         </div>
 
         <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard/template-management/")}
+          >
+            Cancel
+          </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting
               ? "Saving..."

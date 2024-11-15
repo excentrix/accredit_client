@@ -11,27 +11,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, FileDown, FileUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Template } from "@/types/template";
 import { AddTemplateForm } from "@/components/add-template-form";
 import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 export function TemplateManager() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
-    null
-  );
+
   const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const fetchTemplates = async () => {
     try {
@@ -53,9 +46,8 @@ export function TemplateManager() {
     fetchTemplates();
   }, []);
 
-  const handleAddSuccess = () => {
-    setShowAddDialog(false);
-    fetchTemplates();
+  const handleEdit = (template: Template) => {
+    router.push(`/dashboard/template-management/edit?code=${template.code}`);
   };
 
   const handleDelete = async (template: Template) => {
@@ -95,20 +87,12 @@ export function TemplateManager() {
             <FileDown className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Template
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add Template</DialogTitle>
-              </DialogHeader>
-              <AddTemplateForm onSuccess={handleAddSuccess} />
-            </DialogContent>
-          </Dialog>
+          <Button
+            onClick={() => router.push("/dashboard/template-management/add")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Template
+          </Button>
         </div>
       </div>
 
@@ -151,10 +135,7 @@ export function TemplateManager() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setSelectedTemplate(template);
-                          setShowAddDialog(true);
-                        }}
+                        onClick={() => handleEdit(template)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

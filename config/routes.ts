@@ -8,14 +8,14 @@ export const ROUTES: Record<string, AppRoute> = {
     },
     title: "Dashboard",
   },
-  register: {
+  data: {
     path: "/data",
     permission: {
       roles: ["faculty", "iqac_director", "admin"],
     },
     title: "Data",
   },
-  dataManagement: {
+  templateManagement: {
     path: "/template-management",
     permission: {
       roles: ["iqac_director", "admin"],

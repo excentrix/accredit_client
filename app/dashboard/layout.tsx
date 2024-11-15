@@ -6,6 +6,7 @@ import { useAuth } from "@/context/use-auth-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Loader2 } from "lucide-react";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function DashboardLayout({
   children,
@@ -43,6 +44,7 @@ export default function DashboardLayout({
     >
       <div className="flex w-full h-screen overflow-hidden">
         <AppSidebar />
+        <Toaster />
         <main className="flex-1 overflow-auto w-full">
           <div className="container mx-auto p-6 w-full">{children}</div>
         </main>
