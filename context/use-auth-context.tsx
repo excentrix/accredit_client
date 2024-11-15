@@ -61,6 +61,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const router = useRouter();
 
   const login = async (
     username: string,
@@ -69,29 +70,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: "AUTH_START" });
 
-      const response = await api.post("/auth/login/", {
-        username,
-        password,
+      const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
       });
 
-      const { data } = response;
+      const data = await response.json();
+      console.log("Login response:", data); // Debug log
 
       if (data.status === "success" && data.data) {
         // Store tokens
         localStorage.setItem("accessToken", data.data.tokens.access);
         localStorage.setItem("refreshToken", data.data.tokens.refresh);
 
-        // Set the token in axios defaults
-        api.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${data.data.tokens.access}`;
-
         dispatch({ type: "AUTH_SUCCESS", payload: data.data.user });
+        router.push("/dashboard");
         return true;
       } else {
         throw new Error(data.message || "Login failed");
       }
     } catch (error) {
+      console.error("Login error:", error); // Debug log
       const message =
         error instanceof Error ? error.message : "An error occurred";
       dispatch({ type: "AUTH_FAILURE", payload: message });
@@ -101,54 +104,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout/");
+      await fetch("http://127.0.0.1:8000/api/auth/logout/", {
+        method: "POST",
+        credentials: "include",
+      });
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       dispatch({ type: "AUTH_LOGOUT" });
-      // router.push("/login");
+      router.push("/login");
     }
   };
 
   const checkAuth = async () => {
     try {
-      dispatch({ type: "AUTH_START" });
-
-      // Only check if we have a token
       const token = localStorage.getItem("accessToken");
       if (!token) {
         dispatch({ type: "AUTH_LOGOUT" });
         return;
       }
 
-      const response = await api.get("/auth/me/");
+      const response = await fetch("http://127.0.0.1:8000/api/auth/me/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
 
-      if (response.data.status === "success") {
-        dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+      const data = await response.json();
+      console.log("Check auth response:", data); // Debug log
+
+      if (response.ok && data.status === "success") {
+        dispatch({ type: "AUTH_SUCCESS", payload: data.data });
+        console.log("logged in");
       } else {
         dispatch({ type: "AUTH_LOGOUT" });
       }
     } catch (error) {
+      console.error("Check auth error:", error); // Debug log
       dispatch({ type: "AUTH_LOGOUT" });
     }
   };
 
-  // Check auth status on mount
   useEffect(() => {
     checkAuth();
   }, []);
-
   return (
-    <AuthContext.Provider
-      value={{
-        ...state,
-        login,
-        logout,
-        checkAuth,
-      }}
-    >
+    <AuthContext.Provider value={{ ...state, login, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

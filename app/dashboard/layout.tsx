@@ -5,26 +5,26 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/use-auth-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-
+import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, checkAuth } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/login");
+      router.push("/auth/login");
     }
   }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        Loading..
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -41,10 +41,10 @@ export default function DashboardLayout({
         } as React.CSSProperties
       }
     >
-      <div className="flex h-screen">
+      <div className="flex w-full h-screen overflow-hidden">
         <AppSidebar />
-        <main className="flex-1 overflow-auto">
-          <div className="container mx-auto p-6">{children}</div>
+        <main className="flex-1 overflow-auto w-full">
+          <div className="container mx-auto p-6 w-full">{children}</div>
         </main>
       </div>
     </SidebarProvider>

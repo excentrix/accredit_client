@@ -12,6 +12,7 @@ import {
   Settings,
   Layout,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -32,17 +33,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Template } from "@/types/template";
+import api from "@/lib/api"; // Import the api instance
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Button } from "./ui/button";
+// import { AddTemplateForm } from "./addtemplateform";
 
 const navItems = [
   {
     title: "Register",
     icon: FileText,
-    path: "/register",
+    path: "/dashboard/register",
   },
   {
     title: "Data Management",
     icon: Database,
-    path: "/data-management",
+    path: "/dashboard/data-management",
   },
 ];
 
@@ -51,7 +62,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const [templates, setTemplates] = useState<Template[]>([]); // Initialize with empty array
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,30 +77,40 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     }
   }, [pathname]);
 
-  // Fetch templates
+  // Fetch templates with authorization
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch("http://127.0.0.1:8000/api/templates/");
-        if (!response.ok) {
-          throw new Error("Failed to fetch templates");
+
+        const response = await api.get("/templates/");
+        console.log("Template response:", response.data); // Debug log
+
+        if (response.data) {
+          setTemplates(response.data);
+        } else {
+          throw new Error("No data received from server");
         }
-        const data = await response.json();
-        setTemplates(data || []); // Ensure we set an empty array if data is null/undefined
       } catch (error) {
         console.error("Failed to fetch templates:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to fetch templates"
-        );
+        const message =
+          error instanceof Error ? error.message : "Failed to fetch templates";
+        setError(message);
+        // toast({
+        //   title: "Error",
+        //   description: message,
+        //   variant: "destructive",
+        // });
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchTemplates();
-  }, []);
+    if (user) {
+      fetchTemplates();
+    }
+  }, [user]);
 
   // Group templates by criteria
   const groupedTemplates = React.useMemo(() => {
@@ -183,20 +204,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       {/* Second sidebar with templates list */}
       <Sidebar collapsible="none" className="hidden flex-1 md:flex">
         <SidebarHeader className="gap-3.5 border-b p-4">
-          <div className="flex w-full items-center justify-between">
-            <div className="text-base font-medium text-slate-950 dark:text-slate-50">
-              {activeItem.title}
-            </div>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search templates..."
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          {/* ... header content ... */}
         </SidebarHeader>
         <SidebarContent>
           {isLoading ? (
@@ -221,10 +229,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                       {templatesGroup.map((template) => (
                         <Link
                           key={template.id}
-                          href={{
-                            pathname: `${activeItem.path}/${template.code}`,
-                            query: { template: template.id },
-                          }}
+                          href={`/dashboard/data-management/${template.code}`}
+                          className="block"
                         >
                           <div className="flex items-center gap-4 border-b p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">
                             <Badge className="text-base tracking-wider">

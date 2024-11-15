@@ -24,7 +24,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
       );
 
       if (route && !route.permission.roles.includes(user.role)) {
-        router.push(route.permission.redirect || '/dashboard');
+        router.push(route.permission.redirect || '/');
       }
     }
   }, [isAuthenticated, isLoading, pathname, router, user]);

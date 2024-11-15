@@ -12,6 +12,14 @@ export interface Template {
 export interface TemplateColumn {
   name: string;
   display_name: string;
-  type: "string" | "number" | "text" | "url" | "date";
+  type:
+    | "string"
+    | "number"
+    | "text"
+    | "url"
+    | "date"
+    | "email"
+    | "select"
+    | "textarea";
   required?: boolean;
 }
