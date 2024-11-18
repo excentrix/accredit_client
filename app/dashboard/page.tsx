@@ -6,6 +6,9 @@ import { useAuth } from "@/context/use-auth-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Loader2 } from "lucide-react";
+import { ToastAction } from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardLayout({
   children,
@@ -14,6 +17,7 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, isLoading, checkAuth } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   console.log("dash");
 
@@ -43,6 +47,20 @@ export default function DashboardLayout({
   }
 
   return (
-    <div>Dash</div>
+    <div>
+      <Button
+        variant="outline"
+        onClick={() => {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem with your request.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        }}
+      >
+        Show Toast
+      </Button>
+    </div>
   );
 }

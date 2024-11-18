@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Template } from "@/types/template";
 import api from "@/lib/api";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
+import { TemplateSections } from "@/components/template-management/template-sections";
 
 export default function TemplateDataPage() {
   const params = useParams();
@@ -65,25 +66,17 @@ export default function TemplateDataPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto py-6">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">{template.name}</h1>
+          <h1 className="text-2xl font-bold">{template.name}</h1>
           <p className="text-muted-foreground">
             Template Code: {template.code}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Export Data</Button>
-          {/* <Button>Add Entry</Button> */}
-        </div>
+
+        <TemplateSections template={template} />
       </div>
-
-      {/* {template.description && (
-        <p className="text-muted-foreground">{template.description}</p>
-      )} */}
-
-      <DataTable template={template} />
     </div>
   );
 }

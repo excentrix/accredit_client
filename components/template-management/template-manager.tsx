@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, FileDown, FileUp } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Template } from "@/types/template";
 import { AddTemplateForm } from "@/components/add-template-form";
 import api from "@/lib/api";
@@ -142,11 +142,16 @@ export function TemplateManager() {
                           <div className="text-sm text-gray-600 mb-2">
                             <strong>Headers:</strong>
                             <ul className="list-disc pl-5">
-                              {item.headers.map((header: string, headerIndex: number) => (
-                                <li key={headerIndex} className="truncate text-sm text-gray-800">
-                                  {header}
-                                </li>
-                              ))}
+                              {item.headers.map(
+                                (header: string, headerIndex: number) => (
+                                  <li
+                                    key={headerIndex}
+                                    className="truncate text-sm text-gray-800"
+                                  >
+                                    {header}
+                                  </li>
+                                )
+                              )}
                             </ul>
                           </div>
                         )}
@@ -156,14 +161,21 @@ export function TemplateManager() {
                           <div className="text-sm text-gray-600">
                             <strong>Columns:</strong>
                             <ul className="list-disc pl-5">
-                              {item.columns.map((column: any, columnIndex: number) => (
-                                <li key={columnIndex} className="flex justify-between">
-                                  <span className="truncate">{column.name}</span>
-                                  <span className="ml-2 text-xs text-gray-400">
-                                    ({column.data_type})
-                                  </span>
-                                </li>
-                              ))}
+                              {item.columns.map(
+                                (column: any, columnIndex: number) => (
+                                  <li
+                                    key={columnIndex}
+                                    className="flex justify-between"
+                                  >
+                                    <span className="truncate">
+                                      {column.name}
+                                    </span>
+                                    <span className="ml-2 text-xs text-gray-400">
+                                      ({column.data_type})
+                                    </span>
+                                  </li>
+                                )
+                              )}
                             </ul>
                           </div>
                         )}
