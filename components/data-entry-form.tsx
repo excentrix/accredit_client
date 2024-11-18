@@ -33,9 +33,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Template } from "@/types/template";
 import { Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
-import { Label } from "./ui/label";
+import { showToast } from "@/lib/toast";
 
 interface DataEntryFormProps {
   template: Template;
@@ -45,7 +44,6 @@ interface DataEntryFormProps {
 export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const [query, setQuery] = useState<string>("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -167,10 +165,7 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
       });
 
       if (response.data.status === "success") {
-        toast({
-          title: "Success",
-          description: "Data entry has been saved successfully.",
-        });
+        showToast.success("Data entry has been saved successfully.");
         form.reset();
         setIsOpen(false);
         onSuccess();
@@ -179,11 +174,7 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
       }
     } catch (error) {
       console.error("Failed to save data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save data. Please try again.",
-        variant: "destructive",
-      });
+      showToast.error("Failed to save data. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

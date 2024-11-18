@@ -4,12 +4,13 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 import api from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 export function TemplateImport({ onSuccess }: { onSuccess: () => void }) {
   const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,22 +19,14 @@ export function TemplateImport({ onSuccess }: { onSuccess: () => void }) {
 
     // Validate file extension
     if (!file.name.endsWith(".xlsx")) {
-      toast({
-        title: "Error",
-        description: "Please upload an Excel file (.xlsx)",
-        variant: "destructive",
-      });
+      showToast.error("Please upload an Excel file (.xlsx)");
       return;
     }
 
     // Validate filename format (should be like 2.1.1.xlsx)
     const templateCode = file.name.split(".xlsx")[0];
     if (!/^\d+(\.\d+)*$/.test(templateCode)) {
-      toast({
-        title: "Error",
-        description: "File name should be in format like '2.1.1.xlsx'",
-        variant: "destructive",
-      });
+      showToast.error("File name should be in format like '2.1.1.xlsx'");
       return;
     }
 
@@ -49,19 +42,13 @@ export function TemplateImport({ onSuccess }: { onSuccess: () => void }) {
       });
 
       if (response.data.status === "success") {
-        toast({
-          title: "Success",
-          description: response.data.message,
-        });
+        showToast.success(response.data.message);
         onSuccess();
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description:
-          error.response?.data?.message || "Failed to import template",
-        variant: "destructive",
-      });
+      showToast.error(
+        error.response?.data?.message || "Failed to import template"
+      );
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

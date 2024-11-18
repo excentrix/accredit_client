@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -21,20 +21,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+
 import { Plus, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+
 import api from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 const templateSchema = z.object({
   code: z
@@ -77,8 +70,6 @@ export function AddTemplateForm({
   initialData,
   onSuccess,
 }: AddTemplateFormProps) {
-  const { toast } = useToast();
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof templateSchema>>({
@@ -192,19 +183,12 @@ export function AddTemplateForm({
         await api.post("/templates/", data);
       }
 
-      toast({
-        title: "Success",
-        description: `Template ${
-          initialData ? "updated" : "created"
-        } successfully`,
-      });
+      showToast.success(
+        `Template ${initialData ? "updated" : "created"} successfully`
+      );
       onSuccess();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Something went wrong",
-        variant: "destructive",
-      });
+      showToast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }

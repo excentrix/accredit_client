@@ -24,7 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
 import { Template } from "@/types/template";
 import { useTemplate } from "@/context/template-context";
@@ -36,6 +35,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
+import { showToast } from "@/lib/toast";
 
 interface SectionDataEntryFormProps {
   template: Template;
@@ -52,7 +52,6 @@ export function SectionDataEntryForm({
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { refreshSectionData } = useTemplate();
-  const { toast } = useToast();
 
   // Create schema for this section
   const schemaShape: { [key: string]: z.ZodType<any, any> } = {};
@@ -117,6 +116,7 @@ export function SectionDataEntryForm({
   });
 
   const onSubmit = async (values: FormData) => {
+    const loadingToast = showToast.loading("Saving data...");
     try {
       setIsSubmitting(true);
 
@@ -126,28 +126,15 @@ export function SectionDataEntryForm({
       );
 
       if (response.data.status === "success") {
-        toast({
-          title: "Success",
-          description: "Data entry has been saved successfully.",
-        });
+        showToast.dismiss(loadingToast);
+        showToast.success("Data entry has been saved successfully");
         form.reset();
         setIsOpen(false);
-        // Refresh the section data
         await refreshSectionData(sectionIndex);
-        toast({
-          title: "Success",
-          description: "Data entry has been saved successfully.",
-        });
-      } else {
-        throw new Error(response.data.message || "Failed to save data");
       }
-    } catch (error) {
-      console.error("Failed to save data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save data. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      showToast.dismiss(loadingToast);
+      showToast.error(error.response?.data?.message || "Failed to save data");
     } finally {
       setIsSubmitting(false);
     }

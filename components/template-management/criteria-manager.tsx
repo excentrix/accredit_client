@@ -11,19 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 import api from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 interface Criterion {
   id: number;
@@ -40,7 +31,6 @@ export function CriteriaManager() {
     null
   );
   const [showDialog, setShowDialog] = useState(false);
-  const { toast } = useToast();
 
   const fetchCriteria = async () => {
     try {
@@ -48,11 +38,7 @@ export function CriteriaManager() {
       const response = await api.get("/criteria/");
       setCriteria(response.data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch criteria",
-        variant: "destructive",
-      });
+      showToast.error("Failed to fetch criteria");
     } finally {
       setIsLoading(false);
     }

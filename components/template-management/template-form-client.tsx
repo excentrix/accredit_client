@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useToast } from "@/hooks/use-toast";
 import { Template } from "@/types/template";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { AddTemplateForm } from "../add-template-form";
+import { showToast } from "@/lib/toast";
 
 interface TemplateFormClientProps {
   action: string;
@@ -17,7 +17,7 @@ interface TemplateFormClientProps {
 
 export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
   const router = useRouter();
-  const { toast } = useToast();
+
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,11 +32,7 @@ export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
         const response = await api.get(`/templates/${code}`);
         setTemplate(response.data);
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch template details",
-          variant: "destructive",
-        });
+        showToast.error("Failed to fetch template details");
         router.push("/dashboard/template-management");
       } finally {
         setIsLoading(false);

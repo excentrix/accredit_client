@@ -12,18 +12,16 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, FileDown, FileUp } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 import { Template } from "@/types/template";
-import { AddTemplateForm } from "@/components/add-template-form";
+
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { showToast } from "@/lib/toast";
 
 export function TemplateManager() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const { toast } = useToast();
   const router = useRouter();
 
   const fetchTemplates = async () => {
@@ -32,11 +30,7 @@ export function TemplateManager() {
       const response = await api.get("/templates/");
       setTemplates(response.data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch templates",
-        variant: "destructive",
-      });
+      showToast.error("Failed to fetch templates");
     } finally {
       setIsLoading(false);
     }
@@ -55,17 +49,10 @@ export function TemplateManager() {
 
     try {
       await api.delete(`/templates/${template.code}/`);
-      toast({
-        title: "Success",
-        description: "Template deleted successfully",
-      });
+      showToast.success("Template deleted successfully");
       fetchTemplates();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete template",
-        variant: "destructive",
-      });
+      showToast.error("Failed to delete template");
     }
   };
 

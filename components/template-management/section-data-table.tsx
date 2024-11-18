@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit2, Check, X, Trash2, Search, Filter, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { debounce } from "lodash";
 import { Template } from "@/types/template";
+import { showToast } from "@/lib/toast";
 import { useTemplate } from "@/context/template-context";
 
 interface SectionDataTableProps {
@@ -60,8 +60,6 @@ export function SectionDataTable({
   const [editedData, setEditedData] = useState<any>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [rowToDelete, setRowToDelete] = useState<number | null>(null);
-
-  const { toast } = useToast();
 
   // Search functionality with debounce
   const debouncedSearch = useCallback(
@@ -120,6 +118,7 @@ export function SectionDataTable({
   };
 
   const handleSave = async (rowIndex: number) => {
+    const loadingToast = showToast.loading("Updating data...");
     try {
       const currentData = sectionData[sectionIndex] || [];
       const response = await api.put(
@@ -130,21 +129,15 @@ export function SectionDataTable({
       );
 
       if (response.data.status === "success") {
-        toast({
-          title: "Success",
-          description: "Data updated successfully",
-        });
-
+        showToast.dismiss(loadingToast);
+        showToast.success("Data updated successfully");
         await refreshSectionData(sectionIndex);
         setEditingRow(null);
         setEditedData(null);
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update data",
-        variant: "destructive",
-      });
+      showToast.dismiss(loadingToast);
+      showToast.error(error.response?.data?.message || "Failed to update data");
     }
   };
 
@@ -153,31 +146,28 @@ export function SectionDataTable({
     setEditedData(null);
   };
 
-  const handleDelete = async (rowIndex: number) => {
-    try {
-      const currentData = sectionData[sectionIndex] || [];
-      const response = await api.delete(
-        `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`
-      );
+   const handleDelete = async (rowIndex: number) => {
+     const loadingToast = showToast.loading("Deleting data...");
+     try {
+       const currentData = sectionData[sectionIndex] || [];
+       const response = await api.delete(
+         `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`
+       );
 
-      if (response.data.status === "success") {
-        toast({
-          title: "Success",
-          description: "Data deleted successfully",
-        });
-
-        await refreshSectionData(sectionIndex);
-        setShowDeleteDialog(false);
-        setRowToDelete(null);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete data",
-        variant: "destructive",
-      });
-    }
-  };
+       if (response.data.status === "success") {
+         showToast.dismiss(loadingToast);
+         showToast.success("Data deleted successfully");
+         await refreshSectionData(sectionIndex);
+         setShowDeleteDialog(false);
+         setRowToDelete(null);
+       }
+     } catch (error: any) {
+       showToast.dismiss(loadingToast);
+       showToast.error(
+         error.response?.data?.message || "Failed to delete data"
+       );
+     }
+   };
 
   const renderCell = (
     row: any,

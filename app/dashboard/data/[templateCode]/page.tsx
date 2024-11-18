@@ -5,15 +5,18 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Template } from "@/types/template";
 import api from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
+
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { TemplateSections } from "@/components/template-management/template-sections";
+import { showToast } from "@/lib/toast";
+import { SubmissionStatus } from "@/components/submission-status";
+import { SubmissionProvider } from "@/context/submission-context";
 
 export default function TemplateDataPage() {
   const params = useParams();
-  const { toast } = useToast();
+
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,18 +36,14 @@ export default function TemplateDataPage() {
         }
       } catch (error) {
         console.error("Failed to fetch template:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch template details. Please try again.",
-          variant: "destructive",
-        });
+        showToast.error("Failed to fetch template details. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchTemplate();
-  }, [params.templateCode, toast]);
+  }, [params.templateCode]);
 
   if (isLoading) {
     return (
@@ -66,17 +65,20 @@ export default function TemplateDataPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">{template.name}</h1>
-          <p className="text-muted-foreground">
-            Template Code: {template.code}
-          </p>
-        </div>
+    <SubmissionProvider templateCode={template.code}>
+      <div className="container mx-auto py-6">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold">{template.name}</h1>
+            <p className="text-muted-foreground">
+              Template Code: {template.code}
+            </p>
+          </div>
+          <SubmissionStatus />
 
-        <TemplateSections template={template} />
+          <TemplateSections template={template} />
+        </div>
       </div>
-    </div>
+    </SubmissionProvider>
   );
 }

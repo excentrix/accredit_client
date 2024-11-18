@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 interface Config {
   site_name: string;
@@ -26,7 +26,6 @@ export function ConfigManager() {
     contact_email: "",
   });
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   const fetchConfig = async () => {
     try {
@@ -34,11 +33,7 @@ export function ConfigManager() {
       const response = await api.get("/config/");
       setConfig(response.data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch configuration",
-        variant: "destructive",
-      });
+      showToast.error("Failed to fetch configuration");
     } finally {
       setIsLoading(false);
     }
@@ -51,16 +46,9 @@ export function ConfigManager() {
   const handleSave = async () => {
     try {
       await api.put("/config/", config);
-      toast({
-        title: "Success",
-        description: "Configuration saved successfully",
-      });
+      showToast.success("Configuration saved successfully");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save configuration",
-        variant: "destructive",
-      });
+      showToast.error("Failed to save configuration");
     }
   };
 
