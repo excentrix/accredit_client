@@ -1,7 +1,7 @@
 // components/data-entry-form.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -46,55 +46,87 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const [query, setQuery] = useState<string>('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const fetchSuggestions = async (input: string) => {
+    setLoading(true);
+    try {
+      const response = await api.get(`/autocomplete/?q=${input}`);
+      if (response.status === 200) {
+        console.log("respopse$$$$: ", response);
+        setSuggestions(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching autocomplete suggestions:', error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+      if (query.length > 0) { // Fetch suggestions only if the input length is more than 1 character
+          fetchSuggestions(query);
+          console.log("query : ", query);
+          console.log("suggestions : ", suggestions);
+      } else {
+          setSuggestions([]);
+      }
+  }, [query]);
+
   // Create a schema shape based on template columns
   const schemaShape: { [key: string]: z.ZodType<any, any> } = {};
 
-  template.columns.forEach((column) => {
-    let fieldSchema: z.ZodType<any, any>;
+  template.metadata.forEach((item: any) => {
+    item.columns.forEach((column: any) => {
+      let fieldSchema: z.ZodType<any, any>;
 
-    switch (column.type) {
-      case "number":
-        fieldSchema = z
-          .string()
-          .transform((val) => (val === "" ? undefined : Number(val)))
-          .pipe(z.number().optional());
-        break;
+      switch (column.type) {
+        case "number":
+          fieldSchema = z
+            .string()
+            .transform((val) => (val === "" ? undefined : Number(val)))
+            .pipe(z.number().optional());
+          break;
 
-      case "date":
-        fieldSchema = z.string().min(1, "Date is required");
-        break;
+        case "date":
+          fieldSchema = z.string().min(1, "Date is required");
+          break;
 
-      case "url":
-        fieldSchema = z
-          .string()
-          .url("Must be a valid URL")
-          .or(z.string().length(0));
-        break;
+        case "url":
+          fieldSchema = z
+            .string()
+            .url("Must be a valid URL")
+            .or(z.string().length(0));
+          break;
 
-      case "email":
-        fieldSchema = z
-          .string()
-          .email("Must be a valid email")
-          .or(z.string().length(0));
-        break;
+        case "email":
+          fieldSchema = z
+            .string()
+            .email("Must be a valid email")
+            .or(z.string().length(0));
+          break;
 
-      case "select":
-        fieldSchema = z.string().min(1, "Please select an option");
-        break;
+        case "select":
+          fieldSchema = z.string().min(1, "Please select an option");
+          break;
 
-      case "textarea":
-      case "string":
-      default:
-        fieldSchema = z.string().min(1, "This field is required");
-        break;
-    }
+        case "textarea":
+        case "string":
+        default:
+          fieldSchema = z.string().min(1, "This field is required");
+          break;
+      
+      }
 
-    // Make field optional if not required
-    if (!column.required) {
-      fieldSchema = fieldSchema.optional();
-    }
+      // Make field optional if not required
+      if (!column.required) {
+        fieldSchema = fieldSchema.optional();
+      }
 
-    schemaShape[column.name] = fieldSchema;
+      schemaShape[column.name] = fieldSchema;
+
+    });
   });
 
   const formSchema = z.object(schemaShape);
@@ -103,11 +135,14 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: template.columns.reduce((acc, column) => {
-      acc[column.name] = "";
+    defaultValues: template.metadata.reduce((acc: { [key: string]: string }, item: any) => {
+      item.columns.forEach((column: any) => {
+        acc[column.name] = ""; // Initialize each column name with an empty string
+      });
       return acc;
-    }, {} as { [key: string]: string }),
+    }, {}),
   });
+  
 
   const onSubmit = async (values: FormData) => {
     try {
@@ -224,9 +259,51 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* <h3>
+              <div style={{ position: 'relative', width: '300px' }}>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Type a name..."
+                  style={{ width: '100%', padding: '8px' }}
+                />
+                  {loading && <div>Loading...</div>}
+                  {suggestions.length > 0 && (
+                      <ul style={{ 
+                          position: 'absolute', 
+                          top: '40px', 
+                          left: 0, 
+                          width: '100%', 
+                          border: '1px solid #ccc', 
+                          backgroundColor: '#fff', 
+                          listStyleType: 'none', 
+                          padding: '0', 
+                          margin: '0', 
+                          zIndex: 1000 
+                      }}>
+                          {suggestions.map((name, index) => (
+                              <li
+                                  key={index}
+                                  style={{
+                                      padding: '8px',
+                                      cursor: 'pointer'
+                                  }}
+                                  onClick={() => setQuery(name)} // Set the query to the selected suggestion
+                              >
+                                  {name}
+                              </li>
+                          ))}
+                      </ul>
+                  )}
+              </div>
+            </h3> */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {template.columns.map((column) => renderFormField(column))}
+              {template.metadata.flatMap((item: any) => item.columns).map((column: any) => 
+                renderFormField(column)
+              )}
             </div>
+
             <DialogFooter>
               <Button
                 type="button"

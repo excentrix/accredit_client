@@ -102,7 +102,8 @@ export function TemplateManager() {
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
+              {/* <TableHead>Description</TableHead> */}
+              <TableHead>Sections</TableHead>
               <TableHead>Fields</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
@@ -128,8 +129,48 @@ export function TemplateManager() {
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">{template.code}</TableCell>
                   <TableCell>{template.name}</TableCell>
-                  <TableCell>{template.description}</TableCell>
-                  <TableCell>{template.columns.length} fields</TableCell>
+                  <TableCell>
+                    {template.metadata.map((item: any, index: number) => (
+                      <div key={index} className="mb-4">
+                        {/* Display Section Info */}
+                        <div className="font-semibold mb-2 text-primary">
+                          Section {index + 1}
+                        </div>
+
+                        {/* Display Headers */}
+                        {item.headers && item.headers.length > 0 && (
+                          <div className="text-sm text-gray-600 mb-2">
+                            <strong>Headers:</strong>
+                            <ul className="list-disc pl-5">
+                              {item.headers.map((header: string, headerIndex: number) => (
+                                <li key={headerIndex} className="truncate text-sm text-gray-800">
+                                  {header}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Display Columns */}
+                        {item.columns && item.columns.length > 0 && (
+                          <div className="text-sm text-gray-600">
+                            <strong>Columns:</strong>
+                            <ul className="list-disc pl-5">
+                              {item.columns.map((column: any, columnIndex: number) => (
+                                <li key={columnIndex} className="flex justify-between">
+                                  <span className="truncate">{column.name}</span>
+                                  <span className="ml-2 text-xs text-gray-400">
+                                    ({column.data_type})
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </TableCell>
+
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button

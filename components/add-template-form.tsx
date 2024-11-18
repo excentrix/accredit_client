@@ -1,4 +1,4 @@
-// components/templates/add-template-form.tsx
+
 "use client";
 
 import { memo, useMemo, useState } from "react";
@@ -32,44 +32,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Plus,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
-  MoveVertical,
-} from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  useReactTable,
-  flexRender,
-  getCoreRowModel,
-  ColumnDef,
-} from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 
-import { useRouter } from "next/navigation";
-
 const templateSchema = z.object({
-  code: z
-    .string()
-    .min(1, "Code is required")
-    .regex(/^[\d.]+$/, "Code must be in format like 1.1 or 1.1.1"),
+  code: z.string().min(1, "Code is required").regex(/^[\d.]+$/, "Code must be in format like 1.1 or 1.1.1"),
   name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  headers: z.array(z.string()).min(1, "At least one header is required"),
-  columns: z
-    .array(
-      z.object({
-        name: z.string().min(1, "Field name is required"),
-        display_name: z.string().min(1, "Display name is required"),
-        type: z.string().min(1, "Field type is required"),
-        required: z.boolean().default(false),
-        description: z.string().optional(),
-        options: z.array(z.string()).optional(),
-      })
-    )
-    .min(1, "At least one column is required"),
+  metadata: z.array(
+    z.object({
+      headers: z.array(z.string().min(1, "Header is required")),
+      columns: z.array(
+        z.object({
+          name: z.string().min(1, "Field name is required"),
+          type: z.string().min(1, "Field type is required"),
+          data_type: z.string().min(1, "Field type is required"),
+          required: z.boolean().default(false),
+          options: z.array(z.string()).optional(),
+        })
+      ),
+    })
+  ),
 });
 
 const FIELD_TYPES = [
@@ -82,24 +66,12 @@ const FIELD_TYPES = [
   { value: "url", label: "URL" },
 ];
 
-interface Column {
-  name: string;
-  display_name: string;
-  type: string;
-  required: boolean;
-  description?: string;
-  options?: string[];
-}
-
 interface AddTemplateFormProps {
   initialData?: any;
   onSuccess: () => void;
 }
 
-export function AddTemplateForm({
-  initialData,
-  onSuccess,
-}: AddTemplateFormProps) {
+export function AddTemplateForm({ initialData, onSuccess }: AddTemplateFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,325 +81,75 @@ export function AddTemplateForm({
     defaultValues: initialData || {
       code: "",
       name: "",
-      description: "",
-      headers: [""],
-      columns: [
-        {
-          name: "",
-          display_name: "",
-          type: "string",
-          required: false,
-          description: "",
-          options: [],
-        },
-      ],
+      metadata: [{ headers: [""], columns: [{ name: "", type: "string", data_type: "string", required: false, options: [] }] }],
     },
   });
 
-  // Memoized Input Component
-  const MemoizedInput = memo(
-    ({
-      value,
-      onChange,
-      ...props
-    }: React.InputHTMLAttributes<HTMLInputElement>) => (
-      <Input value={value} onChange={onChange} {...props} />
-    )
-  );
+  const MemoizedInput = memo(({ value, onChange, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <Input value={value} onChange={onChange} {...props} />
+  ));
 
-  // Memoized Select Component
-  const MemoizedSelect = memo(
-    ({ value, onValueChange, children, ...props }: any) => (
-      <Select value={value} onValueChange={onValueChange} {...props}>
+  const MemoizedSelect = ({ value, onValueChange, children, ...props }: any) => (
+    <Select value={value} onValueChange={onValueChange} {...props}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select a field type" />
+      </SelectTrigger>
+      <SelectContent>
         {children}
-      </Select>
-    )
+      </SelectContent>
+    </Select>
   );
+  
 
-  // Memoized Checkbox Component
-  const MemoizedCheckbox = memo(
-    ({ checked, onCheckedChange, ...props }: any) => (
-      <Checkbox
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        {...props}
-      />
-    )
-  );
+  const MemoizedCheckbox = memo(({ checked, onCheckedChange, ...props }: any) => (
+    <Checkbox checked={checked} onCheckedChange={onCheckedChange} {...props} />
+  ));
 
-  const memoizedColumns = useMemo<ColumnDef<Column>[]>(
-    () => [
-      {
-        id: "actions",
-        size: 30,
-        cell: memo(({ row, table }: { row: any; table: any }) => {
-          const rowIndex = row.index;
-          const totalRows = form.getValues("columns").length;
-
-          return (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={rowIndex === 0}
-                onClick={() => moveColumn(rowIndex, "up")}
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={rowIndex === totalRows - 1}
-                onClick={() => moveColumn(rowIndex, "down")}
-              >
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </div>
-          );
-        }),
-      },
-      {
-        accessorKey: "name",
-        header: "Name",
-        cell: memo(({ row, table }: { row: any; table: any }) => {
-          const { form } = table.options.meta as { form: any };
-          return (
-            <FormField
-              control={form.control}
-              name={`columns.${row.index}.name`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <MemoizedInput {...field} placeholder="Field name" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          );
-        }),
-      },
-      {
-        accessorKey: "display_name",
-        header: "Display Name",
-        cell: memo(({ row, table }: { row: any; table: any }) => {
-          const { form } = table.options.meta as { form: any };
-          return (
-            <FormField
-              control={form.control}
-              name={`columns.${row.index}.display_name`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <MemoizedInput {...field} placeholder="Display name" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          );
-        }),
-      },
-      {
-        accessorKey: "type",
-        header: "Type",
-        cell: memo(({ row, table }: { row: any; table: any }) => {
-          const { form } = table.options.meta as { form: any };
-          return (
-            <FormField
-              control={form.control}
-              name={`columns.${row.index}.type`}
-              render={({ field }) => (
-                <FormItem>
-                  <MemoizedSelect
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {FIELD_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </MemoizedSelect>
-                </FormItem>
-              )}
-            />
-          );
-        }),
-      },
-      {
-        accessorKey: "required",
-        header: "Required",
-        cell: memo(({ row, table }: { row: any; table: any }) => {
-          const { form } = table.options.meta as { form: any };
-          return (
-            <FormField
-              control={form.control}
-              name={`columns.${row.index}.required`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <MemoizedCheckbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          );
-        }),
-      },
-      {
-        accessorKey: "description",
-        header: "Description",
-        cell: memo(({ row, table }: { row: any; table: any }) => {
-          const { form } = table.options.meta as { form: any };
-          return (
-            <FormField
-              control={form.control}
-              name={`columns.${row.index}.description`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <MemoizedInput {...field} placeholder="Description" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          );
-        }),
-      },
-      {
-        accessorKey: "options",
-        header: "Options",
-        cell: memo(({ row, table }: { row: any; table: any }) => {
-          const { form } = table.options.meta as { form: any };
-          const type = form.watch(`columns.${row.index}.type`);
-          if (type !== "select") return null;
-
-          return (
-            <FormField
-              control={form.control}
-              name={`columns.${row.index}.options`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <MemoizedInput
-                      placeholder="Option1,Option2,..."
-                      value={field.value?.join(",") || ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean)
-                        )
-                      }
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          );
-        }),
-      },
-      {
-        id: "delete",
-        size: 70,
-        cell: memo(({ row }: { row: any }) => (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => removeColumn(row.index)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )),
-      },
-    ],
-    []
-  );
-
-  const table = useReactTable({
-    data: form.watch("columns"),
-    columns: memoizedColumns,
-    getCoreRowModel: getCoreRowModel(),
-    meta: {
-      form,
-    },
-  });
-
-  const moveColumn = (index: number, direction: "up" | "down") => {
-    const columns = form.getValues("columns");
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-
-    if (newIndex < 0 || newIndex >= columns.length) return;
-
-    const newColumns = [...columns];
-    [newColumns[index], newColumns[newIndex]] = [
-      newColumns[newIndex],
-      newColumns[index],
-    ];
-
-    form.setValue("columns", newColumns);
+  const addSection = () => {
+    const currentSections = form.getValues("metadata");
+    form.setValue("metadata", [...currentSections, { headers: [""], columns: [] }]);
   };
 
-  const addHeader = () => {
-    const currentHeaders = form.getValues("headers");
-    form.setValue("headers", [...currentHeaders, ""]);
+  const removeSection = (sectionIndex: number) => {
+    const currentSections = form.getValues("metadata");
+    currentSections.splice(sectionIndex, 1);
+    form.setValue("metadata", currentSections);
   };
 
-  const removeHeader = (index: number) => {
-    const currentHeaders = form.getValues("headers");
-    form.setValue(
-      "headers",
-      currentHeaders.filter((_, i) => i !== index)
-    );
+  const addHeader = (sectionIndex: number) => {
+    const currentSections = form.getValues("metadata");
+    currentSections[sectionIndex].headers.push("");
+    form.setValue("metadata", currentSections);
   };
 
-  const addColumn = () => {
-    const currentColumns = form.getValues("columns");
-    form.setValue("columns", [
-      ...currentColumns,
-      {
-        name: "",
-        display_name: "",
-        type: "string",
-        required: false,
-        description: "",
-        options: [],
-      },
-    ]);
+  const removeHeader = (sectionIndex: number, headerIndex: number) => {
+    const currentSections = form.getValues("metadata");
+    currentSections[sectionIndex].headers.splice(headerIndex, 1);
+    form.setValue("metadata", currentSections);
   };
 
-  const removeColumn = (index: number) => {
-    const currentColumns = form.getValues("columns");
-    form.setValue(
-      "columns",
-      currentColumns.filter((_, i) => i !== index)
-    );
+  const addColumn = (sectionIndex: number) => {
+    const currentSections = form.getValues("metadata");
+    currentSections[sectionIndex].columns.push({
+      name: "",
+      type: "string",
+      data_type: "string",
+      required: false,
+      options: [],
+    });
+    form.setValue("metadata", currentSections);
+  };
+
+  const removeColumn = (sectionIndex: number, columnIndex: number) => {
+    const currentSections = form.getValues("metadata");
+    currentSections[sectionIndex].columns.splice(columnIndex, 1);
+    form.setValue("metadata", currentSections);
   };
 
   const onSubmit = async (values: z.infer<typeof templateSchema>) => {
     try {
       setIsSubmitting(true);
-
-      const cleanedColumns = values.columns.map((column) => ({
-        ...column,
-        options: column.type === "select" ? column.options : undefined,
-      }));
-
-      const data = {
-        ...values,
-        columns: cleanedColumns,
-      };
+      const data = { ...values };
 
       if (initialData) {
         await api.put(`/templates/${initialData.code}/`, data);
@@ -435,19 +157,10 @@ export function AddTemplateForm({
         await api.post("/templates/", data);
       }
 
-      toast({
-        title: "Success",
-        description: `Template ${
-          initialData ? "updated" : "created"
-        } successfully`,
-      });
+      toast({ title: "Success", description: `Template ${initialData ? "updated" : "created"} successfully` });
       onSuccess();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Something went wrong",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.response?.data?.message || "Something went wrong", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -458,172 +171,109 @@ export function AddTemplateForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info Section */}
         <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Template Code *</FormLabel>
-                <FormControl>
-                  <MemoizedInput placeholder="e.g., 1.1.1" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Template Name *</FormLabel>
-                <FormControl>
-                  <MemoizedInput placeholder="Enter template name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
+          <FormField control={form.control} name="code" render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Enter template description" {...field} />
-              </FormControl>
+              <FormLabel>Template Code *</FormLabel>
+              <FormControl><MemoizedInput placeholder="e.g., 1.1.1" {...field} /></FormControl>
+              <FormMessage /> 
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="name" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Template Name *</FormLabel>
+              <FormControl><MemoizedInput placeholder="Enter template name" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
-          )}
-        />
+          )} />
+        </div>
 
-        {/* Headers Section */}
-        <div className="space-y-2">
+        {/* Sections Section */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <FormLabel>Headers *</FormLabel>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addHeader}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Header
+            <FormLabel>Sections *</FormLabel>
+            <Button type="button" variant="outline" size="sm" onClick={addSection}>
+              <Plus className="h-4 w-4 mr-2" /> Add Section
             </Button>
           </div>
-          {form.watch("headers").map((_, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <FormField
-                control={form.control}
-                name={`headers.${index}`}
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormControl>
-                      <Input placeholder={`Header ${index + 1}`} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {index > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeHeader(index)}
-                >
+
+          {form.watch("metadata")?.map((section, sectionIndex) => (
+            <div key={sectionIndex} className="border p-4 rounded-md mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <FormLabel>Section {sectionIndex + 1}</FormLabel>
+                <Button type="button" variant="ghost" size="sm" onClick={() => removeSection(sectionIndex)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
-              )}
+              </div>
+
+              {/* Headers */}
+              {section.headers.map((header, headerIndex) => (
+                <div key={headerIndex} className="flex items-center gap-2 mb-2">
+                  <FormField control={form.control} name={`metadata.${sectionIndex}.headers.${headerIndex}`} render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl><Input placeholder={`Header ${headerIndex + 1}`} {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeHeader(sectionIndex, headerIndex)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => addHeader(sectionIndex)}>
+                <Plus className="h-4 w-4 mr-2" /> Add Header
+              </Button>
+
+              {/* Columns */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <FormLabel>Columns</FormLabel>
+                  <Button type="button" variant="outline" size="sm" onClick={() => addColumn(sectionIndex)}>
+                    <Plus className="h-4 w-4 mr-2" /> Add Column
+                  </Button>
+                </div>
+                {section.columns.map((column, columnIndex) => (
+                  <div key={columnIndex} className="flex items-center gap-4 mb-2">
+                    <FormField control={form.control} name={`metadata.${sectionIndex}.columns.${columnIndex}.name`} render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl><Input placeholder="Column Name" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name={`metadata.${sectionIndex}.columns.${columnIndex}.type`} render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <MemoizedSelect {...field}>
+                            {FIELD_TYPES.map((fieldType) => (
+                              <SelectItem key={fieldType.value} value={fieldType.value}>
+                                {fieldType.label}
+                              </SelectItem>
+                            ))}
+                          </MemoizedSelect>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name={`metadata.${sectionIndex}.columns.${columnIndex}.required`} render={({ field }) => (
+                      <FormItem>
+                        <FormControl><MemoizedCheckbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeColumn(sectionIndex, columnIndex)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Columns Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <FormLabel>Fields *</FormLabel>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addColumn}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Field
-            </Button>
-          </div>
-
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={memoizedColumns.length}
-                      className="h-24 text-center"
-                    >
-                      No fields added
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/dashboard/template-management/")}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? "Saving..."
-              : initialData
-              ? "Update Template"
-              : "Create Template"}
-          </Button>
-        </div>
+        <Button type="submit" disabled={isSubmitting} className="w-full">Save Template</Button>
       </form>
     </Form>
   );

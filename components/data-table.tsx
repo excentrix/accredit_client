@@ -54,7 +54,9 @@ export function DataTable({ template }: DataTableProps) {
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
-    template.columns.map((col) => col.name)
+    template.metadata.flatMap((item: any) => 
+      item.columns.map((col: any) => col.name)
+    )
   );
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editedData, setEditedData] = useState<any>(null);
@@ -231,7 +233,7 @@ export function DataTable({ template }: DataTableProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
-            {template.columns.map((column) => (
+            {template.metadata.flatMap((item: any) => item.columns).map((column: any) => (
               <DropdownMenuCheckboxItem
                 key={column.name}
                 checked={selectedColumns.includes(column.name)}
@@ -260,7 +262,7 @@ export function DataTable({ template }: DataTableProps) {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead style={{ width: 100 }}>Actions</TableHead>
-              {template.columns.map((column, index) => (
+              {template.metadata.flatMap((item: any) => item.columns).map((column: any, index) => (
                 <TableHead key={index}>{column.display_name}</TableHead>
               ))}
             </TableRow>
@@ -269,7 +271,7 @@ export function DataTable({ template }: DataTableProps) {
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={template.columns.length + 1}
+                  colSpan={template.metadata.reduce((total: number, item: any) => total + item.columns.length, 0) + 1}
                   className="text-center h-32 text-muted-foreground"
                 >
                   {searchQuery

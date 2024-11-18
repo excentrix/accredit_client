@@ -75,13 +75,13 @@ export default function TemplateDataPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Export Data</Button>
-          <Button>Add Entry</Button>
+          {/* <Button>Add Entry</Button> */}
         </div>
       </div>
 
-      {template.description && (
+      {/* {template.description && (
         <p className="text-muted-foreground">{template.description}</p>
-      )}
+      )} */}
 
       <DataTable template={template} />
     </div>

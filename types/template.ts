@@ -3,10 +3,11 @@ export interface Template {
   id: number;
   code: string; // e.g., "1.1.1", "1.2.1"
   name: string;
-  description?: string;
-  criteria: string; // e.g., "1.1", "1.2"
-  headers: string[];
-  columns: TemplateColumn[];
+  // description?: string;
+  // criteria: string; // e.g., "1.1", "1.2"
+  // headers: string[];
+  // columns: TemplateColumn[];
+  metadata: [];
 }
 
 export interface TemplateColumn {
