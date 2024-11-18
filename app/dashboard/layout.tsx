@@ -6,7 +6,6 @@ import { useAuth } from "@/context/use-auth-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Loader2 } from "lucide-react";
-import { Toaster } from "@/components/ui/toaster";
 
 export default function DashboardLayout({
   children,

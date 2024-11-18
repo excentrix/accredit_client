@@ -35,6 +35,7 @@ import { debounce } from "lodash";
 import { Template } from "@/types/template";
 import { showToast } from "@/lib/toast";
 import { useTemplate } from "@/context/template-context";
+import { useSubmission } from "@/context/submission-context";
 
 interface SectionDataTableProps {
   template: Template;
@@ -49,6 +50,10 @@ export function SectionDataTable({
 }: SectionDataTableProps) {
   // Get context values
   const { sectionData, refreshSectionData, isLoading } = useTemplate();
+  const { submissionState } = useSubmission();
+
+  const isEditable =
+    submissionState.status === "draft" || submissionState.status === "rejected";
 
   // Local state
   const [filteredData, setFilteredData] = useState<any[]>([]);
@@ -146,28 +151,26 @@ export function SectionDataTable({
     setEditedData(null);
   };
 
-   const handleDelete = async (rowIndex: number) => {
-     const loadingToast = showToast.loading("Deleting data...");
-     try {
-       const currentData = sectionData[sectionIndex] || [];
-       const response = await api.delete(
-         `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`
-       );
+  const handleDelete = async (rowIndex: number) => {
+    const loadingToast = showToast.loading("Deleting data...");
+    try {
+      const currentData = sectionData[sectionIndex] || [];
+      const response = await api.delete(
+        `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`
+      );
 
-       if (response.data.status === "success") {
-         showToast.dismiss(loadingToast);
-         showToast.success("Data deleted successfully");
-         await refreshSectionData(sectionIndex);
-         setShowDeleteDialog(false);
-         setRowToDelete(null);
-       }
-     } catch (error: any) {
-       showToast.dismiss(loadingToast);
-       showToast.error(
-         error.response?.data?.message || "Failed to delete data"
-       );
-     }
-   };
+      if (response.data.status === "success") {
+        showToast.dismiss(loadingToast);
+        showToast.success("Data deleted successfully");
+        await refreshSectionData(sectionIndex);
+        setShowDeleteDialog(false);
+        setRowToDelete(null);
+      }
+    } catch (error: any) {
+      showToast.dismiss(loadingToast);
+      showToast.error(error.response?.data?.message || "Failed to delete data");
+    }
+  };
 
   const renderCell = (
     row: any,
@@ -289,6 +292,7 @@ export function SectionDataTable({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleSave(rowIndex)}
+                            disabled={!isEditable}
                           >
                             <Check className="h-4 w-4 text-green-500" />
                           </Button>
@@ -296,6 +300,7 @@ export function SectionDataTable({
                             variant="ghost"
                             size="sm"
                             onClick={handleCancel}
+                            disabled={!isEditable}
                           >
                             <X className="h-4 w-4 text-red-500" />
                           </Button>
@@ -306,6 +311,7 @@ export function SectionDataTable({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(rowIndex)}
+                            disabled={!isEditable}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -316,6 +322,7 @@ export function SectionDataTable({
                               setRowToDelete(rowIndex);
                               setShowDeleteDialog(true);
                             }}
+                            disabled={!isEditable}
                           >
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>

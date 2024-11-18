@@ -36,6 +36,7 @@ import {
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { showToast } from "@/lib/toast";
+import { useSubmission } from "@/context/submission-context";
 
 interface SectionDataEntryFormProps {
   template: Template;
@@ -52,6 +53,10 @@ export function SectionDataEntryForm({
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { refreshSectionData } = useTemplate();
+
+  const { submissionState } = useSubmission();
+  const isEditable =
+    submissionState.status === "draft" || submissionState.status === "rejected";
 
   // Create schema for this section
   const schemaShape: { [key: string]: z.ZodType<any, any> } = {};
@@ -200,7 +205,7 @@ export function SectionDataEntryForm({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" disabled={!isEditable}>
           <Plus className="h-4 w-4" />
           Add Entry
         </Button>
@@ -222,7 +227,7 @@ export function SectionDataEntryForm({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || !isEditable}>
                 {isSubmitting ? "Saving..." : "Save Entry"}
               </Button>
             </DialogFooter>
