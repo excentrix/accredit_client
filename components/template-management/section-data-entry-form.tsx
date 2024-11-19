@@ -1,7 +1,7 @@
 // components/section-data-entry-form.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -20,10 +20,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import api from "@/lib/api";
 import { Template } from "@/types/template";
 import { useTemplate } from "@/context/template-context";
@@ -37,94 +38,130 @@ import {
 import { Textarea } from "../ui/textarea";
 import { showToast } from "@/lib/toast";
 import { useSubmission } from "@/context/submission-context";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SectionDataEntryFormProps {
   template: Template;
   section: any;
   sectionIndex: number;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+}
+
+// Helper function for validation schema
+function getValidationSchema(column: any): z.ZodType<any, any> {
+  let schema: z.ZodType<any, any>;
+
+  switch (column.data_type) {
+    case "number":
+      schema = z
+        .string()
+        .transform((val) => (val === "" ? undefined : Number(val)))
+        .pipe(z.number().optional());
+      break;
+
+    case "date":
+      schema = z.string().min(1, "Date is required");
+      break;
+
+    case "url":
+      schema = z.string().url("Must be a valid URL").or(z.string().length(0));
+      break;
+
+    case "email":
+      schema = z
+        .string()
+        .email("Must be a valid email")
+        .or(z.string().length(0));
+      break;
+
+    case "option":
+      schema = z.string().min(1, "Please select an option");
+      break;
+
+    case "textarea":
+      schema = z.string().min(1, "This field is required");
+      break;
+
+    case "string":
+    default:
+      schema = z.string().min(1, "This field is required");
+      break;
+  }
+
+  return column.required ? schema : schema.optional();
 }
 
 export function SectionDataEntryForm({
   template,
   section,
   sectionIndex,
+  onSuccess,
 }: SectionDataEntryFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { refreshSectionData } = useTemplate();
+  const { submissionState, isLoading } = useSubmission();
 
-  const { submissionState } = useSubmission();
-  const isEditable =
-    submissionState.status === "draft" || submissionState.status === "rejected";
+  // Create form schema using useMemo
+  const formSchema = useMemo(() => {
+    const schemaShape: { [key: string]: z.ZodType<any, any> } = {};
 
-  // Create schema for this section
-  const schemaShape: { [key: string]: z.ZodType<any, any> } = {};
+    section.columns.forEach((column: any) => {
+      if (column.type === "single") {
+        schemaShape[column.name] = getValidationSchema(column);
+      } else if (column.type === "group") {
+        column.columns.forEach((nestedColumn: any) => {
+          const fieldName = `${column.name}_${nestedColumn.name}`;
+          schemaShape[fieldName] = getValidationSchema(nestedColumn);
+        });
+      }
+    });
 
-  section.columns.forEach((column: any) => {
-    let fieldSchema: z.ZodType<any, any>;
+    return z.object(schemaShape);
+  }, [section]);
 
-    switch (column.data_type) {
-      case "number":
-        fieldSchema = z
-          .string()
-          .transform((val) => (val === "" ? undefined : Number(val)))
-          .pipe(z.number().optional());
-        break;
-      case "date":
-        fieldSchema = z.string().min(1, "Date is required");
-        break;
-
-      case "url":
-        fieldSchema = z
-          .string()
-          .url("Must be a valid URL")
-          .or(z.string().length(0));
-        break;
-
-      case "email":
-        fieldSchema = z
-          .string()
-          .email("Must be a valid email")
-          .or(z.string().length(0));
-        break;
-
-      case "option":
-        fieldSchema = z.string().min(1, "Please select an option");
-        break;
-
-      case "string":
-      default:
-        fieldSchema = z.string().min(1, "This field is required");
-        break;
-    }
-
-    if (!column.required) {
-      fieldSchema = fieldSchema.optional();
-    }
-
-    schemaShape[column.name] = fieldSchema;
-  });
-
-  const formSchema = z.object(schemaShape);
   type FormData = z.infer<typeof formSchema>;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: section.columns.reduce(
       (acc: { [key: string]: string }, column: any) => {
-        acc[column.name] = "";
+        if (column.type === "single") {
+          acc[column.name] = "";
+        } else if (column.type === "group") {
+          column.columns.forEach((nestedColumn: any) => {
+            acc[`${column.name}_${nestedColumn.name}`] = "";
+          });
+        }
         return acc;
       },
       {}
     ),
   });
 
-  const onSubmit = async (values: FormData) => {
-    const loadingToast = showToast.loading("Saving data...");
-    try {
-      setIsSubmitting(true);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <Loader2 className="h-4 w-4 animate-spin" />
+      </div>
+    );
+  }
 
+  const isEditable = submissionState
+    ? submissionState.status === "draft" ||
+      submissionState.status === "rejected"
+    : true;
+
+  const onSubmit = async (values: FormData) => {
+    if (!isEditable) {
+      showToast.error("Cannot modify data in current submission status");
+      return;
+    }
+
+    const loadingToast = showToast.loading("Saving data...");
+    setIsSubmitting(true);
+
+    try {
       const response = await api.post(
         `/templates/${template.code}/sections/${sectionIndex}/data/`,
         values
@@ -136,6 +173,7 @@ export function SectionDataEntryForm({
         form.reset();
         setIsOpen(false);
         await refreshSectionData(sectionIndex);
+        onSuccess?.();
       }
     } catch (error: any) {
       showToast.dismiss(loadingToast);
@@ -144,7 +182,13 @@ export function SectionDataEntryForm({
       setIsSubmitting(false);
     }
   };
+
   const renderFormField = (column: any) => {
+    const isFieldRequired = column.required;
+    let fieldType = column.data_type;
+    let placeholder = `Enter ${column.name}`;
+    let description = column.description;
+
     return (
       <FormField
         key={column.name}
@@ -154,15 +198,16 @@ export function SectionDataEntryForm({
           <FormItem>
             <FormLabel>
               {column.name}
-              {column.required && (
+              {isFieldRequired && (
                 <span className="text-destructive ml-1">*</span>
               )}
             </FormLabel>
             <FormControl>
-              {column.data_type === "option" ? (
+              {fieldType === "option" ? (
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={isSubmitting}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -177,24 +222,30 @@ export function SectionDataEntryForm({
                     ))}
                   </SelectContent>
                 </Select>
-              ) : column.data_type === "textarea" ? (
-                <Textarea placeholder={`Enter ${column.name}`} {...field} />
+              ) : fieldType === "textarea" ? (
+                <Textarea
+                  placeholder={placeholder}
+                  {...field}
+                  disabled={isSubmitting}
+                />
               ) : (
                 <Input
                   type={
-                    column.data_type === "number"
+                    fieldType === "number"
                       ? "number"
-                      : column.data_type === "date"
+                      : fieldType === "date"
                       ? "date"
-                      : column.data_type === "email"
+                      : fieldType === "email"
                       ? "email"
                       : "text"
                   }
-                  placeholder={`Enter ${column.name}`}
+                  placeholder={placeholder}
                   {...field}
+                  disabled={isSubmitting}
                 />
               )}
             </FormControl>
+            {description && <FormDescription>{description}</FormDescription>}
             <FormMessage />
           </FormItem>
         )}
@@ -202,10 +253,21 @@ export function SectionDataEntryForm({
     );
   };
 
+  if (!isEditable) {
+    return (
+      <Alert>
+        <AlertTitle>Read Only</AlertTitle>
+        <AlertDescription>
+          This submission cannot be modified in its current status.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2" disabled={!isEditable}>
+        <Button className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Entry
         </Button>
@@ -224,11 +286,19 @@ export function SectionDataEntryForm({
                 type="button"
                 variant="outline"
                 onClick={() => setIsOpen(false)}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting || !isEditable}>
-                {isSubmitting ? "Saving..." : "Save Entry"}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Entry"
+                )}
               </Button>
             </DialogFooter>
           </form>

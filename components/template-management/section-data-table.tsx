@@ -53,7 +53,7 @@ export function SectionDataTable({
   const { submissionState } = useSubmission();
 
   const isEditable =
-    submissionState.status === "draft" || submissionState.status === "rejected";
+    submissionState?.status === "draft" || submissionState?.status === "rejected";
 
   // Local state
   const [filteredData, setFilteredData] = useState<any[]>([]);

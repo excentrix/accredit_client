@@ -1,10 +1,13 @@
-export type SubmissionStatus = "draft" | "submitted" | "approved" | "rejected";
-
 export interface SubmissionState {
   id: number | null;
-  status: SubmissionStatus;
+  status: "draft" | "submitted" | "approved" | "rejected";
+  created_at?: string;
   submitted_at?: string;
-  verified_by?: string;
   verified_at?: string;
+  verified_by?: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
   rejection_reason?: string;
 }
