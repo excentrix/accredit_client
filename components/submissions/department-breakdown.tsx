@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface DepartmentBreakdownProps {
   initialAcademicYear?: number; // Changed to number for ID
@@ -54,6 +55,12 @@ export function DepartmentBreakdown({
   const [selectedYear, setSelectedYear] = useState<number | undefined>(
     initialAcademicYear
   );
+
+  const router = useRouter();
+
+  const handleReviewClick = (submissionId: string) => {
+    router.push(`dashboard/submissions/${submissionId}`);
+  };
 
   // Fetch academic years
   const { data: academicYearsResponse, isLoading: isLoadingYears } = useQuery({
@@ -88,13 +95,13 @@ export function DepartmentBreakdown({
     );
   }
 
-//   if (error) {
-//     return (
-//       <div className="p-8 text-center">
-//         <p className="text-red-500">Error loading data. Please try again.</p>
-//       </div>
-//     );
-//   }
+  //   if (error) {
+  //     return (
+  //       <div className="p-8 text-center">
+  //         <p className="text-red-500">Error loading data. Please try again.</p>
+  //       </div>
+  //     );
+  //   }
 
   const academicYears = academicYearsResponse?.data || [];
   const breakdown = breakdownResponse;
@@ -167,9 +174,9 @@ export function DepartmentBreakdown({
                       <Badge
                         variant={
                           dept.completion_rate === 100
-                            ? "success"
+                            ? "default"
                             : dept.completion_rate > 50
-                            ? "warning"
+                            ? "secondary"
                             : "destructive"
                         }
                       >
@@ -236,15 +243,17 @@ export function DepartmentBreakdown({
                               : "Not submitted"}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                // Handle review action
-                              }}
-                            >
-                              Review
-                            </Button>
+                            {template.submission_id && ( // Add submission_id to your API response
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleReviewClick(template.submission_id)
+                                }
+                              >
+                                Review
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

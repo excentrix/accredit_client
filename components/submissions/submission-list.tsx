@@ -36,6 +36,7 @@ import api from "@/lib/api";
 import { SubmissionReview } from "./submission-review";
 import { useQuery } from "@tanstack/react-query";
 import { SubmissionStats } from "./submission-stats";
+import { useRouter } from "next/navigation";
 
 const statusColors = {
   draft: "bg-gray-500",
@@ -66,6 +67,12 @@ export function SubmissionList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [departments, setDepartments] = useState<any[]>([]);
+
+  const router = useRouter();
+
+  const handleReviewClick = (submissionId: string) => {
+    router.push(`/dashboard/submissions/${submissionId}`);
+  };
 
   // Fetch departments for filter
   useEffect(() => {
@@ -101,78 +108,10 @@ export function SubmissionList() {
     },
   });
 
-  // Fetch stats with React Query
-  const { data: stats, isLoading: isLoadingStats } = useQuery<SubmissionStats>({
-    queryKey: ["submission-stats"],
-    queryFn: async () => {
-      const response = await api.get("/submissions/stats/");
-      console.log(response.data);
-      return response.data;
-    },
-  });
-
-  const statCards = [
-    {
-      title: "Pending Review",
-      value: stats?.pending || 0,
-      icon: <Clock className="h-4 w-4 text-yellow-500" />,
-      description: "Awaiting review",
-      color: "border-l-4 border-l-yellow-500",
-    },
-    {
-      title: "Approved",
-      value: stats?.approved || 0,
-      icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-      description: "Successfully approved",
-      color: "border-l-4 border-l-green-500",
-    },
-    {
-      title: "Rejected",
-      value: stats?.rejected || 0,
-      icon: <XCircle className="h-4 w-4 text-red-500" />,
-      description: "Needs revision",
-      color: "border-l-4 border-l-red-500",
-    },
-    {
-      title: "Total Submissions",
-      value: stats?.total || 0,
-      icon: <ListChecks className="h-4 w-4 text-blue-500" />,
-      description: "All submissions",
-      color: "border-l-4 border-l-blue-500",
-    },
-  ];
-
-  console.log("submissions", submissions);
-
   return (
     <div className="space-y-6">
       {/* Stats Section */}
       <SubmissionStats />
-      {/* <div className="grid gap-4 grid-cols-1 md:grid-cols-4">
-        {statCards.map((card, index) => (
-          <Card key={index} className={card.color}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {card.title}
-              </CardTitle>
-              {card.icon}
-            </CardHeader>
-            <CardContent>
-              {isLoadingStats ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <div className="text-2xl font-bold">{card.value}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {card.description}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div> */}
-
       {/* Filters Section */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-1 items-center gap-4">
@@ -224,7 +163,7 @@ export function SubmissionList() {
               <TableHead>Status</TableHead>
               <TableHead>Submitted By</TableHead>
               <TableHead>Submitted At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-left">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -247,11 +186,13 @@ export function SubmissionList() {
               </TableRow>
             ) : (
               submissions.map((submission: Submission) => (
-                <TableRow key={submission.id}>
-                  <TableCell className="font-medium">
-                    {submission.department_name}
-                  </TableCell>
+                <TableRow
+                  key={submission.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleReviewClick(submission.id.toString())}
+                >
                   <TableCell>{submission.template_code}</TableCell>
+                  <TableCell>{submission.department_name}</TableCell>
                   <TableCell>
                     <Badge className={`${statusColors[submission.status]}`}>
                       {submission.status}
