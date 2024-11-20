@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/use-auth-context";
 import { Toaster } from "react-hot-toast";
 
+
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {

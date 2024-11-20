@@ -20,7 +20,7 @@ import api from "@/lib/api";
 interface SubmissionReviewProps {
   templateCode: Template["code"];
   submission: any; // Replace with proper type
-  departmentId: string;
+  departmentId: number;
   onReviewComplete: () => void;
 }
 
