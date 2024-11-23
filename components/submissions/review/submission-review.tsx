@@ -256,7 +256,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
 
                 {[
                   ...new Set(
-                    submission.data_rows.map((row) => row.section_index)
+                    submission?.data_rows?.map((row) => row.section_index)
                   ),
                 ].map((sectionIndex) => {
                   const sectionData = submission.data_rows.filter(

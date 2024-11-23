@@ -29,6 +29,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    if (error.response?.data instanceof Blob) {
+      return Promise.reject(error);
+    }
+
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -64,11 +68,11 @@ api.interceptors.response.use(
 // Add request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log('API Request:', {
+    console.log("API Request:", {
       url: config.url,
       method: config.method,
       headers: config.headers,
@@ -76,7 +80,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
+    console.error("API Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -84,7 +88,7 @@ api.interceptors.request.use(
 // Add response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', {
+    console.log("API Response:", {
       url: response.config.url,
       status: response.status,
       data: response.data,
@@ -92,7 +96,7 @@ api.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.error('API Response Error:', {
+    console.error("API Response Error:", {
       url: error.config?.url,
       status: error.response?.status,
       data: error.response?.data,
@@ -103,20 +107,20 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = localStorage.getItem("refreshToken");
         const response = await axios.post(
-          'http://127.0.0.1:8000/api/auth/token/refresh/',
+          "http://127.0.0.1:8000/api/auth/token/refresh/",
           { refresh: refreshToken }
         );
 
         const { access } = response.data;
-        localStorage.setItem('accessToken', access);
+        localStorage.setItem("accessToken", access);
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
       } catch (refreshError) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/auth/login';
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/auth/login";
         return Promise.reject(refreshError);
       }
     }
@@ -124,6 +128,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 
 export default api;

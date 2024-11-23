@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { Template } from "@/types/template";
 import api from "@/lib/api";
 import { NavUser } from "./nav-user";
+import path from "path";
 
 const mainNavItems = [
   {
@@ -61,6 +62,11 @@ const mainNavItems = [
     title: "Template Management",
     icon: Database,
     path: "/dashboard/template-management",
+  },
+  {
+    title: "Export",
+    icon: FileText,
+    path: "/dashboard/export",
   },
 ];
 

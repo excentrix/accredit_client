@@ -1,10 +1,17 @@
 // types/template.ts
+interface Criteria {
+  id: number;
+  number: number;
+  name: string;
+  description: string;
+}
+
 export interface Template {
   id: number;
   code: string; // e.g., "1.1.1", "1.2.1"
   name: string;
   // description?: string;
-  // criteria: string; // e.g., "1.1", "1.2"
+  criteria: Criteria; // e.g., "1.1", "1.2"
   // headers: string[];
   // columns: TemplateColumn[];
   metadata: [];
