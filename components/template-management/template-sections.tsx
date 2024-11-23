@@ -7,8 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Template } from "@/types/template";
 import { TemplateProvider, useTemplate } from "@/context/template-context";
-import { SectionDataEntryForm } from "./section-data-entry-form";
-import { SectionDataTable } from "./section-data-table";
+import { SectionContent } from "./section-content";
 
 interface TemplateSectionsProps {
   template: Template;
@@ -48,30 +47,26 @@ function TemplateSectionsContent({ template }: TemplateSectionsProps) {
       </TabsList>
 
       {template.metadata.map((section: any, index: number) => (
-        <TabsContent key={index} value={`section-${index}`}>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">{section.headers[0]}</h2>
-              <SectionDataEntryForm
-                template={template}
-                section={section}
-                sectionIndex={index}
-                onSuccess={() => refreshSectionData(index)}
-              />
-            </div>
-
-            {error[index] && (
-              <Alert variant="destructive">
-                <AlertDescription>{error[index]}</AlertDescription>
-              </Alert>
-            )}
-
-            <SectionDataTable
-              template={template}
-              section={section}
-              sectionIndex={index}
-            />
+        <TabsContent
+          key={index}
+          value={`section-${index}`}
+          className="space-y-4"
+        >
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold">{section.headers[0]}</h2>
           </div>
+
+          {error[index] && (
+            <Alert variant="destructive">
+              <AlertDescription>{error[index]}</AlertDescription>
+            </Alert>
+          )}
+
+          <SectionContent
+            template={template}
+            section={section}
+            sectionIndex={index}
+          />
         </TabsContent>
       ))}
     </Tabs>

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -89,6 +89,7 @@ const DATA_TYPES = [
 const columnSchema: z.ZodSchema<any> = z
   .object({
     name: z.string().min(1, "Field name is required"),
+    display_name: z.string().min(1, "Display name is required"),
     type: z.enum(["single", "group"]),
     data_type: z.string().optional(),
     required: z.boolean().default(true),
@@ -135,6 +136,14 @@ const templateSchema = z.object({
     })
   ),
 });
+
+function sanitizeColumnName(name: string): string {
+  return name
+    .trim()
+    .replace(/\s+/g, "_") // Replace spaces with underscores
+    .replace(/[^a-zA-Z0-9_]/g, "") // Remove special characters except underscores
+    .replace(/_{2,}/g, "_"); // Replace multiple underscores with single
+}
 
 // Options Field Component
 const OptionsField = ({
@@ -225,6 +234,14 @@ const ColumnField = ({
   const columnType = form.watch(`${path}.type`);
   const dataType = form.watch(`${path}.data_type`);
 
+  // Add this useEffect to automatically update the sanitized name
+  useEffect(() => {
+    const displayName = form.watch(`${path}.display_name`);
+    if (displayName) {
+      form.setValue(`${path}.name`, sanitizeColumnName(displayName));
+    }
+  }, [form.watch(`${path}.display_name`)]);
+
   return (
     <div
       className="border rounded-md p-4 mb-2"
@@ -233,12 +250,31 @@ const ColumnField = ({
       <div className="flex items-center gap-4 mb-4">
         <FormField
           control={form.control}
+          name={`${path}.display_name`}
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormLabel>Display Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Column Display Name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name={`${path}.name`}
           render={({ field }) => (
             <FormItem className="flex-1">
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Internal Name</FormLabel>
               <FormControl>
-                <Input placeholder="Column Name" {...field} />
+                <Input
+                  placeholder="Auto-generated"
+                  {...field}
+                  disabled
+                  className="bg-muted"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -580,6 +616,7 @@ export function AddTemplateForm({
     const currentSections = form.getValues("metadata");
     currentSections[sectionIndex].columns.push({
       name: "",
+      display_name: "",
       type: "single",
       data_type: "string",
       required: true,
@@ -597,28 +634,37 @@ export function AddTemplateForm({
   const onSubmit = async (values: z.infer<typeof templateSchema>) => {
     try {
       setIsSubmitting(true);
-      const data = { ...values };
 
-      // Validate code format
-      const selectedCriteria = criteria?.find(
-        (c: Criteria) => c.id === values.criteria
-      );
-      if (selectedCriteria) {
-        const validation = validateCode(values.code, selectedCriteria.number);
-        if (typeof validation === "string") {
-          form.setError("code", {
-            type: "manual",
-            message: validation,
-          });
-          return;
-        }
-      }
+      // Sanitize all column names before submission
+      const sanitizedData = {
+        ...values,
+        metadata: values.metadata.map((section) => ({
+          ...section,
+          columns: section.columns.map((column) => {
+            const sanitizedColumn = {
+              ...column,
+              name: sanitizeColumnName(column.display_name),
+            };
+
+            if (column.type === "group" && column.columns) {
+              sanitizedColumn.columns = column.columns.map(
+                (nestedColumn: any) => ({
+                  ...nestedColumn,
+                  name: sanitizeColumnName(nestedColumn.display_name),
+                })
+              );
+            }
+
+            return sanitizedColumn;
+          }),
+        })),
+      };
 
       if (initialData) {
-        await api.put(`/templates/${initialData.code}/`, data);
+        await api.put(`/templates/${initialData.code}/`, sanitizedData);
         showToast.success("Template updated successfully");
       } else {
-        await api.post("/templates/", data);
+        await api.post("/templates/", sanitizedData);
         showToast.success("Template created successfully");
       }
       onSuccess();

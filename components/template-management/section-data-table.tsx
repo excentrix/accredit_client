@@ -1,7 +1,6 @@
-// components/section-data-table.tsx
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -37,10 +36,167 @@ import { showToast } from "@/lib/toast";
 import { useTemplate } from "@/context/template-context";
 import { useSubmission } from "@/context/submission-context";
 
+interface Column {
+  name: string;
+  type: "single" | "group";
+  data_type?: string;
+  required?: boolean;
+  columns?: Column[];
+}
+
+interface TableHeader {
+  id: string;
+  label: string;
+  colSpan: number;
+  rowSpan: number;
+  path: string[];
+  data_type?: string;
+}
+
+interface FlattenedColumn {
+  name: string;
+  label: string;
+  groupLabel?: string;
+  originalName: string;
+  data_type: string;
+  path: string[];
+  required?: boolean;
+}
+
 interface SectionDataTableProps {
   template: Template;
   section: any;
   sectionIndex: number;
+}
+
+function sanitizeColumnName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9]/g, "_").replace(/_{2,}/g, "_");
+}
+
+function flattenColumns(
+  columns: Column[],
+  parentPath: string[] = []
+): FlattenedColumn[] {
+  return columns.reduce((acc: FlattenedColumn[], column: Column) => {
+    const sanitizedName = sanitizeColumnName(column.name);
+
+    if (column.type === "group" && column.columns) {
+      // For group columns, we only include the child columns
+      return [
+        ...acc,
+        ...column.columns.map((nested) => ({
+          name: `${sanitizedName}_${sanitizeColumnName(nested.name)}`,
+          label: nested.name,
+          groupLabel: column.name,
+          originalName: nested.name,
+          data_type: nested.data_type || "string",
+          path: [sanitizedName, sanitizeColumnName(nested.name)],
+          required: nested.required,
+        })),
+      ];
+    }
+
+    return [
+      ...acc,
+      {
+        name: sanitizedName,
+        label: column.name,
+        groupLabel: parentPath[parentPath.length - 1],
+        originalName: column.name,
+        data_type: column.data_type || "string",
+        path: [...parentPath, sanitizedName],
+        required: column.required,
+      },
+    ];
+  }, []);
+}
+
+function generateHeaders(
+  columns: Column[],
+  parentPath: string[] = []
+): {
+  headerRows: TableHeader[][];
+  maxDepth: number;
+} {
+  let maxDepth = 1;
+  const headerMap = new Map<number, TableHeader[]>();
+
+  function processColumn(
+    column: Column,
+    depth: number = 0,
+    path: string[] = []
+  ): number {
+    const sanitizedName = sanitizeColumnName(column.name);
+    const currentPath = [...path, sanitizedName];
+
+    if (column.type === "group" && column.columns?.length) {
+      // Add the group header
+      if (!headerMap.has(depth)) headerMap.set(depth, []);
+      headerMap.get(depth)!.push({
+        id: currentPath.join("_"),
+        label: column.name,
+        colSpan: column.columns.length,
+        rowSpan: 1,
+        path: currentPath,
+      });
+
+      // Add individual column headers in the next row
+      if (!headerMap.has(depth + 1)) headerMap.set(depth + 1, []);
+      column.columns.forEach((subColumn) => {
+        headerMap.get(depth + 1)!.push({
+          id: `${currentPath.join("_")}_${sanitizeColumnName(subColumn.name)}`,
+          label: subColumn.name,
+          colSpan: 1,
+          rowSpan: 1,
+          path: [...currentPath, sanitizeColumnName(subColumn.name)],
+          data_type: subColumn.data_type,
+        });
+      });
+
+      maxDepth = Math.max(maxDepth, depth + 2);
+      return column.columns.length;
+    } else {
+      if (!headerMap.has(depth)) headerMap.set(depth, []);
+      headerMap.get(depth)!.push({
+        id: currentPath.join("_"),
+        label: column.name,
+        colSpan: 1,
+        rowSpan: maxDepth - depth,
+        path: currentPath,
+        data_type: column.data_type,
+      });
+      return 1;
+    }
+  }
+
+  columns.forEach((column) => processColumn(column));
+  return {
+    headerRows: Array.from(
+      { length: maxDepth },
+      (_, i) => headerMap.get(i) || []
+    ),
+    maxDepth,
+  };
+}
+
+function getNestedValue(data: any, path: string[]): any {
+  if (!data) return "";
+
+  // For flattened data, construct the key
+  const flattenedKey = path.join("_");
+  if (data[flattenedKey] !== undefined) {
+    return data[flattenedKey];
+  }
+
+  return "";
+}
+
+// Update setNestedValue function to handle flattened data
+function setNestedValue(obj: any, path: string[], value: any): any {
+  const newObj = { ...obj };
+  const flattenedKey = path.join("_");
+  newObj[flattenedKey] = value;
+  return newObj;
 }
 
 export function SectionDataTable({
@@ -48,18 +204,30 @@ export function SectionDataTable({
   section,
   sectionIndex,
 }: SectionDataTableProps) {
-  // Get context values
+  // Context values
   const { sectionData, refreshSectionData, isLoading } = useTemplate();
   const { submissionState } = useSubmission();
 
+  const { headerRows, maxDepth } = useMemo(
+    () => generateHeaders(section.columns),
+    [section.columns]
+  );
+
   const isEditable =
-    submissionState?.status === "draft" || submissionState?.status === "rejected";
+    submissionState?.status === "draft" ||
+    submissionState?.status === "rejected";
+
+  // Memoized flattened columns
+  const flatColumns = useMemo(
+    () => flattenColumns(section.columns),
+    [section.columns]
+  );
 
   // Local state
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
-    section.columns.map((col: any) => col.name)
+    flatColumns.map((col) => col.name)
   );
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editedData, setEditedData] = useState<any>(null);
@@ -68,7 +236,7 @@ export function SectionDataTable({
 
   // Search functionality with debounce
   const debouncedSearch = useCallback(
-    debounce((query: string, columns: string[], data: any[]) => {
+    debounce((query: string, columns: FlattenedColumn[], data: any[]) => {
       if (!query) {
         setFilteredData(data);
         return;
@@ -76,8 +244,10 @@ export function SectionDataTable({
 
       const lowercaseQuery = query.toLowerCase();
       const filtered = data.filter((row) => {
-        return columns.some((colName) => {
-          const value = String(row.data[colName] || "").toLowerCase();
+        return columns.some((col) => {
+          const value = String(
+            getNestedValue(row.data, col.path) || ""
+          ).toLowerCase();
           return value.includes(lowercaseQuery);
         });
       });
@@ -90,8 +260,15 @@ export function SectionDataTable({
   // Update filtered data when search or data changes
   useEffect(() => {
     const currentData = sectionData[sectionIndex] || [];
-    debouncedSearch(searchQuery, selectedColumns, currentData);
-  }, [searchQuery, selectedColumns, sectionData, sectionIndex]);
+
+    // Flatten any nested data structure
+    const cleanedData = currentData.map((row: any) => ({
+      ...row,
+      data: row.data?.data || row.data || {}, // Handle both nested and flat data
+    }));
+
+    debouncedSearch(searchQuery, flatColumns, cleanedData);
+  }, [searchQuery, flatColumns, sectionData, sectionIndex]);
 
   // Initial data fetch
   useEffect(() => {
@@ -118,19 +295,28 @@ export function SectionDataTable({
   // CRUD Operations
   const handleEdit = (rowIndex: number) => {
     const currentData = sectionData[sectionIndex] || [];
+    // Get the data, handling both nested and flat structures
+    const rowData =
+      currentData[rowIndex]?.data?.data || currentData[rowIndex]?.data || {};
     setEditingRow(rowIndex);
-    setEditedData({ ...currentData[rowIndex].data });
+    setEditedData(rowData);
   };
 
   const handleSave = async (rowIndex: number) => {
     const loadingToast = showToast.loading("Updating data...");
     try {
       const currentData = sectionData[sectionIndex] || [];
+
+      // Send data without nesting
+      const dataToSend = {
+        data: editedData, // Send flat data structure
+      };
+
+      console.log("Saving data:", dataToSend); // Debug log
+
       const response = await api.put(
         `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`,
-        {
-          data: editedData,
-        }
+        dataToSend
       );
 
       if (response.data.status === "success") {
@@ -174,30 +360,49 @@ export function SectionDataTable({
 
   const renderCell = (
     row: any,
-    column: any,
+    column: FlattenedColumn,
     rowIndex: number,
     colIndex: number
   ) => {
+    // if (process.env.NODE_ENV === "development") {
+    //   console.log("Cell debug:", {
+    //     column: column.name,
+    //     path: column.path,
+    //     flattenedKey: column.path.join("_"),
+    //     rowData: row.data,
+    //     value: getNestedValue(row.data, column.path),
+    //   });
+    // }
+
     if (editingRow === rowIndex) {
+      const currentValue = getNestedValue(editedData, column.path);
       return (
         <Input
-          value={editedData[column.name] || ""}
-          onChange={(e) =>
-            setEditedData({ ...editedData, [column.name]: e.target.value })
-          }
+          value={currentValue?.toString() ?? ""} // Convert to string or use empty string
+          onChange={(e) => {
+            let value: string | number | null = e.target.value;
+            if (column.data_type === "number") {
+              value = e.target.value === "" ? null : Number(e.target.value);
+            }
+            const newData = setNestedValue(editedData, column.path, value);
+            setEditedData(newData);
+          }}
           className="h-8"
           autoFocus={colIndex === 0}
-          type={
-            column.data_type === "number"
-              ? "number"
-              : column.data_type === "date"
-              ? "date"
-              : "text"
-          }
+          type={column.data_type === "number" ? "number" : "text"}
+          required={column.required}
+          min={column.data_type === "number" ? 0 : undefined}
         />
       );
     }
-    return row.data[column.name];
+
+    const value = getNestedValue(row.data, column.path);
+    if (value === undefined || value === null || value === "") return "-";
+
+    if (column.data_type === "number") {
+      return typeof value === "number" ? value.toLocaleString() : value;
+    }
+    return value;
   };
 
   // Render loading state
@@ -211,7 +416,6 @@ export function SectionDataTable({
 
   return (
     <div className="space-y-4">
-      {/* Search and Filter Section */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -228,8 +432,8 @@ export function SectionDataTable({
               <Filter className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[200px]">
-            {section.columns.map((column: any) => (
+          <DropdownMenuContent align="end" className="w-[300px]">
+            {flatColumns.map((column) => (
               <DropdownMenuCheckboxItem
                 key={column.name}
                 checked={selectedColumns.includes(column.name)}
@@ -241,33 +445,50 @@ export function SectionDataTable({
                   );
                 }}
               >
-                {column.name}
+                {column.groupLabel
+                  ? `${column.groupLabel} › ${column.label}`
+                  : column.label}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        {searchQuery && (
-          <div className="text-sm text-muted-foreground">
-            Found {filteredData.length} results
-          </div>
-        )}
       </div>
 
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead style={{ width: 100 }}>Actions</TableHead>
-              {section.columns.map((column: any, index: number) => (
-                <TableHead key={index}>{column.name}</TableHead>
-              ))}
-            </TableRow>
+            {headerRows.map((row, rowIndex) => (
+              <TableRow key={rowIndex} className="bg-muted/50">
+                {rowIndex === 0 && (
+                  <TableHead rowSpan={maxDepth} style={{ width: 100 }}>
+                    Actions
+                  </TableHead>
+                )}
+                {row.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    rowSpan={header.rowSpan}
+                    className="text-center border-r last:border-r-0"
+                  >
+                    <div className="space-y-1">
+                      <div className="font-medium">{header.label}</div>
+                      {header.data_type && (
+                        <div className="text-xs text-muted-foreground">
+                          {header.data_type}
+                        </div>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={section.columns.length + 1}
+                  colSpan={flatColumns.length + 1}
                   className="text-center h-32 text-muted-foreground"
                 >
                   {searchQuery
@@ -330,8 +551,11 @@ export function SectionDataTable({
                       )}
                     </div>
                   </TableCell>
-                  {section.columns.map((column: any, colIndex: number) => (
-                    <TableCell key={colIndex}>
+                  {flatColumns.map((column, colIndex) => (
+                    <TableCell
+                      key={colIndex}
+                      className="border-r last:border-r-0"
+                    >
                       {renderCell(row, column, rowIndex, colIndex)}
                     </TableCell>
                   ))}
