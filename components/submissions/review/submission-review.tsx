@@ -48,6 +48,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
 
+import { SubmissionTimeline } from "./submission-timeline";
+import { DiffViewer } from "./diff-viewer";
+
 interface SubmissionReviewProps {
   submissionId: string;
 }
@@ -112,6 +115,59 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
     }
   };
 
+  function generateCSV(submission: any) {
+    if (!submission.data_rows || submission.data_rows.length === 0) {
+      return `Template: ${submission.template_name}
+        Code: ${submission.template_code}
+        Department: ${submission.department_name}
+        Academic Year: ${submission.academic_year_name}
+
+        No data available`;
+    }
+
+    // Get headers from the first row
+    const headers = Object.keys(submission.data_rows[0].data);
+
+    // Create CSV content
+    const csvContent = [
+      // Add template info as header
+      [`Template: ${submission.template_name}`],
+      //   [`Code: ${submission.template_code}`],
+      //   [`Department: ${submission.department_name}`],
+      //   [`Academic Year: ${submission.academic_year_name}`],
+      [""], // Empty line for spacing
+      headers, // Column headers
+      // Add data rows
+      ...submission.data_rows.map((row: any) =>
+        headers.map((header) => row.data[header] ?? "")
+      ),
+    ]
+      .map((row) =>
+        row
+          .map((cell: any) =>
+            typeof cell === "string" && cell.includes(",") ? `"${cell}"` : cell
+          )
+          .join(",")
+      )
+      .join("\n");
+
+    return csvContent;
+  }
+
+  function downloadCSV(content: string, filename: string) {
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Back Button */}
@@ -166,43 +222,137 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
         <TabsContent value="data" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Template: {submission.template.name}</CardTitle>
+              <CardTitle>{submission.template_name}</CardTitle>
               <CardDescription>
-                Code: {submission.template.code}
+                Template Code: {submission.template_code}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[600px] pr-4">
-                {submission.data_rows.map(
-                  (section: any, sectionIndex: number) => (
-                    <div key={sectionIndex} className="space-y-4 mb-8">
-                      <h3 className="font-semibold text-lg">
-                        Section {sectionIndex + 1}
-                      </h3>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Field</TableHead>
-                            <TableHead>Value</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(section.data).map(
-                            ([key, value]: [string, any]) => (
-                              <TableRow key={key}>
-                                <TableCell className="font-medium">
-                                  {key}
-                                </TableCell>
-                                <TableCell>{value}</TableCell>
-                              </TableRow>
-                            )
+              <Tabs defaultValue="section-0" className="space-y-4">
+                <TabsList className="w-full flex-wrap h-auto gap-2 p-2">
+                  {[
+                    ...new Set(
+                      submission.data_rows.map((row) => row.section_index)
+                    ),
+                  ].map((sectionIndex) => {
+                    const sectionData = submission.data_rows.filter(
+                      (row) => row.section_index === sectionIndex
+                    );
+
+                    return (
+                      <TabsTrigger
+                        key={sectionIndex}
+                        value={`section-${sectionIndex}`}
+                        className="flex items-center gap-2"
+                      >
+                        <span>Section {sectionIndex + 1}</span>
+                        <Badge variant="secondary" className="ml-2">
+                          {sectionData.length} entries
+                        </Badge>
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+
+                {[
+                  ...new Set(
+                    submission.data_rows.map((row) => row.section_index)
+                  ),
+                ].map((sectionIndex) => {
+                  const sectionData = submission.data_rows.filter(
+                    (row) => row.section_index === sectionIndex
+                  );
+
+                  return (
+                    <TabsContent
+                      key={sectionIndex}
+                      value={`section-${sectionIndex}`}
+                    >
+                      <div className="space-y-4">
+                        {/* Section Header */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              Section {sectionIndex + 1} Data
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              Showing {sectionData.length} entries
+                            </p>
+                          </div>
+
+                          {sectionData.length > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Handle section data download
+                                const csv = generateCSV(sectionData);
+                                downloadCSV(
+                                  csv,
+                                  `${submission.template_code}_section${
+                                    sectionIndex + 1
+                                  }.csv`
+                                );
+                              }}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Download Section Data
+                            </Button>
                           )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )
-                )}
-              </ScrollArea>
+                        </div>
+
+                        {/* Section Data Table */}
+                        {sectionData && sectionData.length > 0 ? (
+                          <div className="border rounded-lg">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-muted/50">
+                                  {Object.keys(sectionData[0].data).map(
+                                    (header) => (
+                                      <TableHead
+                                        key={header}
+                                        className="whitespace-pre-wrap"
+                                      >
+                                        {header}
+                                      </TableHead>
+                                    )
+                                  )}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {sectionData.map((row) => (
+                                  <TableRow key={row.row_number}>
+                                    {Object.values(row.data).map(
+                                      (value, index) => (
+                                        <TableCell
+                                          key={index}
+                                          className="whitespace-pre-wrap"
+                                        >
+                                          {String(value) ?? "—"}
+                                        </TableCell>
+                                      )
+                                    )}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg bg-muted/5">
+                            <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                            <h3 className="text-lg font-semibold mb-2">
+                              No Data Available
+                            </h3>
+                            <p className="text-muted-foreground text-sm">
+                              This section does not contain any data yet.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  );
+                })}
+              </Tabs>
             </CardContent>
           </Card>
         </TabsContent>
@@ -282,11 +432,31 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
           <Card>
             <CardHeader>
               <CardTitle>Submission History</CardTitle>
+              <CardDescription>
+                Track all changes and actions performed on this submission
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {/* Add submission history timeline here */}
-              </div>
+              {submission.history && submission.history.length > 0 ? (
+                <ScrollArea className="h-[500px] pr-4">
+                  <SubmissionTimeline
+                    events={submission.history.map((event: any) => ({
+                      id: event.id.toString(),
+                      action: event.action,
+                      performed_by_name: event.performed_by_name,
+                      performed_at: event.performed_at,
+                      details: event.details,
+                      renderDetails: event.action === "updated" && (
+                        <DiffViewer changes={event.details.changes} />
+                      ),
+                    }))}
+                  />
+                </ScrollArea>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No history available for this submission
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -306,15 +476,21 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
               <Eye className="mr-2 h-4 w-4" />
               View Full Data
             </Button>
+            {/* {submission.data_rows && submission.data_rows.length > 0 && ( */}
             <Button
               variant="outline"
               onClick={() => {
-                // Handle download
+                const csv = generateCSV(submission);
+                downloadCSV(
+                  csv,
+                  `${submission.template_code}_${submission.academic_year_name}.csv`
+                );
               }}
             >
               <Download className="mr-2 h-4 w-4" />
               Download Data
             </Button>
+            {/* )} */}
             <div className="flex-1" />
             <Button
               variant="destructive"
@@ -376,13 +552,73 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
         open={isViewDataDialogOpen}
         onOpenChange={setIsViewDataDialogOpen}
       >
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-[90vw]">
           <DialogHeader>
-            <DialogTitle>Submission Data</DialogTitle>
+            <DialogTitle>{submission.template_name}</DialogTitle>
+            <DialogDescription>
+              Template Code: {submission.template_code}
+            </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[600px] overflow-y-auto">
-            {/* Render full data here */}
+          <div className="max-h-[80vh] overflow-y-auto">
+            {submission.data_rows && submission.data_rows.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {Object.keys(submission.data_rows[0].data).map((header) => (
+                      <TableHead key={header} className="whitespace-pre-wrap">
+                        {header}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {submission.data_rows.map((row: any) => (
+                    <TableRow key={row.row_number}>
+                      {Object.values(row.data).map((value, index) => (
+                        <TableCell key={index} className="whitespace-pre-wrap">
+                          {String(value) ?? "—"}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  No Data Available
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  This submission does not contain any data yet.
+                </p>
+              </div>
+            )}
           </div>
+          <DialogFooter>
+            {submission.data_rows && submission.data_rows.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // Handle download
+                  const csv = generateCSV(submission);
+                  downloadCSV(
+                    csv,
+                    `${submission.template_code}_${submission.academic_year_name}.csv`
+                  );
+                }}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download CSV
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDataDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
