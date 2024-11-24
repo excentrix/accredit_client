@@ -150,7 +150,11 @@ export default function ExportPage() {
 
       // Generate filename
       const date = new Date().toISOString().split("T")[0];
-      const filename = `export_${type}_${currentAcademicYear.name}_${date}.xlsx`;
+      const filename = `${type === "all" ? "all_" : ""}${
+        type === "criterion" ? `_${params?.criterion}` : ""
+      }${type === "template" ? `_${params?.template_code}` : ""}_${
+        currentAcademicYear.name
+      }.xlsx`;
 
       link.setAttribute("download", filename);
       document.body.appendChild(link);
