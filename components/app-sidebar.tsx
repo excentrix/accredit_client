@@ -119,12 +119,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   React.useEffect(() => { 
     const fetchBoards = async () => {
       const boards = await api.get("/boards/");
-      console.log("BOARDS", boards.data);
       setBoards(boards.data);
-      console.log("selected board 1 : ", selectedBoard);
     };
     fetchBoards();
-  }, []);
+  }, [selectedBoard]);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -133,7 +131,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       try {
         setIsLoading(true);
         setError(null);
-        console.log("selected board: ", selectedBoard);
         const response = await api.get("/templates/",{
           params: { board: selectedBoard }
         });
@@ -298,7 +295,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                       key={board.code}
                       onSelect={() => setSelectedBoard(board.code)}
                     >
-                      {board.code}{" "}
+                      {board.code}
                       {board.code === selectedBoard && <Check className="ml-auto" />}
                     </DropdownMenuItem>
                   ))}
