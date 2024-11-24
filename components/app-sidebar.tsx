@@ -27,6 +27,13 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Collapsible,
   CollapsibleContent,
@@ -38,6 +45,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Template } from "@/types/template";
+import { Board } from "@/types/board";
 import api from "@/lib/api";
 import { NavUser } from "./nav-user";
 import path from "path";
@@ -97,14 +105,26 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   const { user } = useAuth();
   const pathname = usePathname();
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [boards, setBoards] = useState<Board[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBoard, setSelectedBoard] = useState("NAAC");
 
   const currentContext =
     Object.entries(contextConfig).find(([path]) =>
       pathname.startsWith(path)
     )?.[1] || contextConfig["/dashboard"];
+
+  React.useEffect(() => { 
+    const fetchBoards = async () => {
+      const boards = await api.get("/boards/");
+      console.log("BOARDS", boards.data);
+      setBoards(boards.data);
+      console.log("selected board 1 : ", selectedBoard);
+    };
+    fetchBoards();
+  }, []);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -113,7 +133,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await api.get("/templates/");
+        console.log("selected board: ", selectedBoard);
+        const response = await api.get("/templates/",{
+          params: { board: selectedBoard }
+        });
         setTemplates(response.data);
       } catch (error) {
         console.error("Failed to fetch templates:", error);
@@ -247,14 +270,40 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         <SidebarHeader className="border-b p-4">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild className="md:h-8">
+              <SidebarMenuButton size="lg" asChild className="md:h-12">
                 <Link href="/dashboard" className="flex items-center gap-3">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <Command className="size-4" />
                   </div>
-                  <span className="text-lg font-semibold">Accredit</span>
+                  <div className="flex flex-col gap-0.5 leading-none">
+                    <span className="text-lg font-semibold">Accredit</span>
+                  </div>
                 </Link>
               </SidebarMenuButton>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size="lg" asChild className="md:h-12">
+                    <div className="flex flex-col gap-0.5 leading-none">
+                      <span className="">{selectedBoard}</span>
+                      <ChevronsUpDown className="ml-auto" />
+                    </div>
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width]"
+                  align="start"
+                >
+                  {boards.map((board) => (
+                    <DropdownMenuItem
+                      key={board.code}
+                      onSelect={() => setSelectedBoard(board.code)}
+                    >
+                      {board.code}{" "}
+                      {board.code === selectedBoard && <Check className="ml-auto" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>

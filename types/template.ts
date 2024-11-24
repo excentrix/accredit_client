@@ -10,6 +10,7 @@ export interface Template {
   id: number;
   code: string; // e.g., "1.1.1", "1.2.1"
   name: string;
+  board: string;
   // description?: string;
   criteria: Criteria; // e.g., "1.1", "1.2"
   // headers: string[];
