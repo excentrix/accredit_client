@@ -27,13 +27,13 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react"
+import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Collapsible,
   CollapsibleContent,
@@ -49,6 +49,7 @@ import { Board } from "@/types/board";
 import api from "@/lib/api";
 import { NavUser } from "./nav-user";
 import path from "path";
+import { useSettings } from "@/context/settings-context";
 
 const mainNavItems = [
   {
@@ -102,39 +103,54 @@ const contextConfig = {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
+  const {
+    selectedBoard,
+    setSelectedBoard,
+    selectedAcademicYear,
+    setSelectedAcademicYear,
+    boards,
+    academicYears,
+    isLoading: settingsLoading,
+  } = useSettings();
+
   const { user } = useAuth();
   const pathname = usePathname();
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [boards, setBoards] = useState<Board[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBoard, setSelectedBoard] = useState("NAAC");
 
   const currentContext =
     Object.entries(contextConfig).find(([path]) =>
       pathname.startsWith(path)
     )?.[1] || contextConfig["/dashboard"];
 
-  React.useEffect(() => { 
-    const fetchBoards = async () => {
-      const boards = await api.get("/boards/");
-      setBoards(boards.data);
-    };
-    fetchBoards();
-  }, [selectedBoard]);
-
   useEffect(() => {
     const fetchTemplates = async () => {
-      if (!currentContext.showTemplates) return;
+      if (!currentContext.showTemplates || !selectedAcademicYear) return;
 
       try {
         setIsLoading(true);
         setError(null);
-        const response = await api.get("/templates/",{
-          params: { board: selectedBoard }
+
+        console.log("Fetching templates with params:", {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
         });
-        setTemplates(response.data);
+
+        const response = await api.get("/templates/", {
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          },
+        });
+
+        if (response.data) {
+          setTemplates(response.data);
+        } else {
+          setError("No data received from server");
+        }
       } catch (error) {
         console.error("Failed to fetch templates:", error);
         setError(
@@ -146,7 +162,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     };
 
     fetchTemplates();
-  }, [currentContext.showTemplates]);
+  }, [currentContext.showTemplates, selectedBoard, selectedAcademicYear]);
 
   const groupedTemplates = React.useMemo(() => {
     if (!templates.length) return {};
@@ -277,30 +293,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   </div>
                 </Link>
               </SidebarMenuButton>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton size="lg" asChild className="md:h-12">
-                    <div className="flex gap-0.3 leading-none">
-                      <span className="">{selectedBoard}</span>
-                      <ChevronsUpDown className="ml-auto" />
-                    </div>
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width]"
-                  align="start"
-                >
-                  {boards.map((board) => (
-                    <DropdownMenuItem
-                      key={board.code}
-                      onSelect={() => setSelectedBoard(board.code)}
-                    >
-                      {board.code}
-                      {board.code === selectedBoard && <Check className="ml-auto" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>

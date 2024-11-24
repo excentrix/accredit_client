@@ -3,8 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/use-auth-context";
 import { Toaster } from "react-hot-toast";
-
-
+import { Settings } from "lucide-react";
+import { SettingsProvider } from "@/context/settings-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,8 +22,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          {children}
-          <Toaster />
+          <SettingsProvider>
+            {children}
+            <Toaster />
+          </SettingsProvider>
         </AuthProvider>
       </body>
     </html>

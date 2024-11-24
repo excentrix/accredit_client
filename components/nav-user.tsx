@@ -1,19 +1,16 @@
-"use client"
+"use client";
 
 import {
   BadgeCheck,
   Bell,
+  Check,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
-  Sparkles,
-} from "lucide-react"
+  School,
+  Calendar,
+} from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,24 +19,41 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { useSettings } from "@/context/settings-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function NavUser({
   user,
 }: {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
+  const {
+    selectedBoard,
+    setSelectedBoard,
+    selectedAcademicYear,
+    setSelectedAcademicYear,
+    boards,
+    academicYears,
+    isLoading,
+  } = useSettings();
+
+  const currentBoard = boards.find((b) => b.code === selectedBoard);
+  const currentYear = academicYears.find((y) => y.id === selectedAcademicYear);
 
   return (
     <SidebarMenu>
@@ -80,35 +94,88 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+
+            {/* Board Selection */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <School className="mr-2 h-4 w-4" />
+                <span>
+                  Board:{" "}
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-20" />
+                  ) : (
+                    currentBoard?.name || "Select Board"
+                  )}
+                </span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {boards.map((board) => (
+                  <DropdownMenuItem
+                    key={board.code}
+                    onClick={() => setSelectedBoard(board.code)}
+                  >
+                    <span>{board.name}</span>
+                    {board.code === selectedBoard && (
+                      <Check className="ml-auto h-4 w-4" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            {/* Academic Year Selection */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Calendar className="mr-2 h-4 w-4" />
+                <span>
+                  Year:{" "}
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-20" />
+                  ) : (
+                    currentYear?.name || "Select Year"
+                  )}
+                </span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {academicYears.map((year) => (
+                  <DropdownMenuItem
+                    key={year.id}
+                    onClick={() => setSelectedAcademicYear(year.id)}
+                  >
+                    <span>{year.name}</span>
+                    {year.is_current && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        (Current)
+                      </span>
+                    )}
+                    {year.id === selectedAcademicYear && (
+                      <Check className="ml-auto h-4 w-4" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <BadgeCheck />
+                <BadgeCheck className="mr-2 h-4 w-4" />
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
+                <Bell className="mr-2 h-4 w-4" />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut />
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }
