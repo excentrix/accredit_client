@@ -283,7 +283,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg" asChild className="md:h-12">
-                    <div className="flex flex-col gap-0.5 leading-none">
+                    <div className="flex gap-0.3 leading-none">
                       <span className="">{selectedBoard}</span>
                       <ChevronsUpDown className="ml-auto" />
                     </div>
