@@ -32,6 +32,7 @@ import { HelpCircle, Loader2, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { showToast } from "@/lib/toast";
+import { useSettings } from "@/context/settings-context";
 
 // Interfaces
 interface AddTemplateFormProps {
@@ -129,6 +130,8 @@ const templateSchema = z.object({
     .regex(/^[\d.]+$/, "Code must be in format like 1.1 or 1.1.1"),
   name: z.string().min(1, "Name is required"),
   criteria: z.number().min(1, "Criteria is required"),
+  board: z.string(), // Keep as string (board code)
+  academic_year: z.string(), // Keep as string (academic year ID)
   metadata: z.array(
     z.object({
       headers: z.array(z.string().min(1, "Header is required")),
@@ -536,13 +539,20 @@ export function AddTemplateForm({
   onSuccess,
 }: AddTemplateFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    selectedBoard, // This is already the board code
+    selectedAcademicYear,
+    currentBoard,
+  } = useSettings();
 
+  // Update criteria query to use board code
   const { data: criteria, isLoading: isLoadingCriteria } = useQuery({
-    queryKey: ["criteria"],
+    queryKey: ["criteria", selectedBoard],
     queryFn: async () => {
-      const response = await api.get("/criteria/list/");
+      const response = await api.get(`/criteria/list/?board=${selectedBoard}`);
       return response.data;
     },
+    enabled: !!selectedBoard,
   });
 
   const validateCode = (code: string, criteriaNumber: number) => {
@@ -558,6 +568,8 @@ export function AddTemplateForm({
       code: "",
       name: "",
       criteria: undefined,
+      board: selectedBoard, // Use board code
+      academic_year: selectedAcademicYear,
       metadata: [
         {
           headers: [""],
@@ -574,6 +586,31 @@ export function AddTemplateForm({
       ],
     },
   });
+
+  const watchedCriteria = form.watch("criteria");
+
+  useEffect(() => {
+    if (watchedCriteria) {
+      const selectedCriteria = criteria?.find(
+        (c: Criteria) => c.id === watchedCriteria
+      );
+      if (selectedCriteria) {
+        const currentCode = form.getValues("code");
+        // Only update if code is empty or starts with a different number
+        if (
+          !currentCode ||
+          !currentCode.startsWith(`${selectedCriteria.number}.`)
+        ) {
+          form.setValue("code", `${selectedCriteria.number}.`);
+        }
+      }
+    }
+  }, [watchedCriteria, criteria]);
+
+  useEffect(() => {
+    form.setValue("board", selectedBoard.toString());
+    form.setValue("academic_year", selectedAcademicYear.toString());
+  }, [selectedBoard, selectedAcademicYear, form]);
 
   const addSection = () => {
     const currentSections = form.getValues("metadata");
@@ -631,13 +668,20 @@ export function AddTemplateForm({
     form.setValue("metadata", currentSections);
   };
 
+  useEffect(() => {
+    form.setValue("board", selectedBoard.toString());
+    form.setValue("academic_year", selectedAcademicYear.toString());
+  }, [selectedBoard, selectedAcademicYear]);
+
+  // Rest of your form code remains the same...
+
   const onSubmit = async (values: z.infer<typeof templateSchema>) => {
     try {
       setIsSubmitting(true);
 
-      // Sanitize all column names before submission
       const sanitizedData = {
         ...values,
+        board: selectedBoard, // This should be the board ID number now
         metadata: values.metadata.map((section) => ({
           ...section,
           columns: section.columns.map((column) => {
@@ -670,7 +714,13 @@ export function AddTemplateForm({
       onSuccess();
     } catch (error: any) {
       console.error("Template submission error:", error);
-      showToast.error(error.response?.data?.message || "Something went wrong");
+      if (error.response?.data?.board) {
+        showToast.error(error.response.data.board[0]);
+      } else {
+        showToast.error(
+          error.response?.data?.message || "Something went wrong"
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }

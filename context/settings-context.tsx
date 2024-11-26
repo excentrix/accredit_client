@@ -5,25 +5,43 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "@/lib/api";
 import { AcademicYear } from "@/types/academic-year";
 import { Board } from "@/types/board";
+// import localStorage from "local-";
 
 interface SettingsContextType {
-  selectedBoard: string;
-  setSelectedBoard: (board: string) => void;
-  selectedAcademicYear: string;
-  setSelectedAcademicYear: (year: string) => void;
+  selectedBoard: number;
+  setSelectedBoard: (boardId: number) => void;
+  selectedAcademicYear: number;
+  setSelectedAcademicYear: (yearId: number) => void;
   boards: Board[];
   academicYears: AcademicYear[];
   isLoading: boolean;
   error: string | null;
+  currentBoard?: Board;
+  currentAcademicYear?: AcademicYear;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined
 );
 
+const STORAGE_KEYS = {
+  SELECTED_BOARD: "selected_board",
+  SELECTED_ACADEMIC_YEAR: "selected_academic_year",
+} as const;
+
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [selectedBoard, setSelectedBoard] = useState<string>("naac");
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("");
+  const [selectedBoard, setSelectedBoard] = useState<number>(() => {
+    const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_BOARD);
+    return stored ? parseInt(stored, 10) : 1;
+  });
+
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<number>(
+    () => {
+      const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_ACADEMIC_YEAR);
+      return stored ? parseInt(stored, 10) : 0;
+    }
+  );
+
   const [boards, setBoards] = useState<Board[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,14 +59,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         ]);
 
         setBoards(boardsResponse.data);
+        console.log("boards", boardsResponse.data);
         setAcademicYears(yearsResponse.data.data);
 
-        // Set current academic year if available
-        const currentYear = yearsResponse.data.data.find(
-          (year: AcademicYear) => year.is_current
-        );
-        if (currentYear) {
-          setSelectedAcademicYear(currentYear.id);
+        // Only set current academic year if no year is selected
+        if (!selectedAcademicYear) {
+          const currentYear = yearsResponse.data.data.find(
+            (year: AcademicYear) => year.is_current
+          );
+          if (currentYear) {
+            handleSetAcademicYear(currentYear.id);
+          }
+        }
+
+        // Set default board if current selection is invalid
+        if (
+          !boardsResponse.data.some((board: any) => board.id === selectedBoard)
+        ) {
+          const defaultBoard = boardsResponse.data[0];
+          if (defaultBoard) {
+            handleSetBoard(defaultBoard.id);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch initial settings data:", error);
@@ -61,32 +92,60 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     fetchInitialData();
   }, []);
 
-  // Add validation before setting values
-  const handleSetBoard = (board: string) => {
-    if (boards.some((b) => b.code === board)) {
-      setSelectedBoard(board);
+  const handleSetBoard = (boardId: number) => {
+    if (boards.some((b) => b.id === boardId)) {
+      setSelectedBoard(boardId);
+      localStorage.setItem(STORAGE_KEYS.SELECTED_BOARD, boardId.toString());
+    } else {
+      console.warn(`Invalid board ID: ${boardId}`);
     }
   };
 
-  const handleSetAcademicYear = (year: string) => {
-    if (academicYears.some((y) => y.id === year)) {
-      setSelectedAcademicYear(year);
+  const handleSetAcademicYear = (yearId: number) => {
+    if (academicYears.some((y) => y.id === yearId)) {
+      setSelectedAcademicYear(yearId);
+      localStorage.setItem(
+        STORAGE_KEYS.SELECTED_ACADEMIC_YEAR,
+        yearId.toString()
+      );
+    } else {
+      console.warn(`Invalid academic year ID: ${yearId}`);
     }
   };
+
+  // Get current board and academic year objects
+  const currentBoard = boards.find((b) => b.id === selectedBoard);
+  const currentAcademicYear = academicYears.find(
+    (y) => y.id === selectedAcademicYear
+  );
+
+  const value = React.useMemo(
+    () => ({
+      selectedBoard,
+      setSelectedBoard: handleSetBoard,
+      selectedAcademicYear,
+      setSelectedAcademicYear: handleSetAcademicYear,
+      boards,
+      academicYears,
+      isLoading,
+      error,
+      currentBoard,
+      currentAcademicYear,
+    }),
+    [
+      selectedBoard,
+      selectedAcademicYear,
+      boards,
+      academicYears,
+      isLoading,
+      error,
+      currentBoard,
+      currentAcademicYear,
+    ]
+  );
 
   return (
-    <SettingsContext.Provider
-      value={{
-        selectedBoard,
-        setSelectedBoard: handleSetBoard,
-        selectedAcademicYear,
-        setSelectedAcademicYear: handleSetAcademicYear,
-        boards,
-        academicYears,
-        isLoading,
-        error,
-      }}
-    >
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );
@@ -98,4 +157,18 @@ export function useSettings() {
     throw new Error("useSettings must be used within a SettingsProvider");
   }
   return context;
+}
+
+export function useResetSettings() {
+  const { setSelectedBoard, setSelectedAcademicYear, boards } = useSettings();
+
+  return React.useCallback(() => {
+    const defaultBoard = boards[0];
+    if (defaultBoard) {
+      setSelectedBoard(defaultBoard.id);
+    }
+    setSelectedAcademicYear(0);
+    localStorage.removeItem(STORAGE_KEYS.SELECTED_BOARD);
+    localStorage.removeItem(STORAGE_KEYS.SELECTED_ACADEMIC_YEAR);
+  }, [setSelectedBoard, setSelectedAcademicYear, boards]);
 }

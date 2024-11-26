@@ -34,29 +34,32 @@ api.interceptors.response.use(
     }
 
     // If error is 401 and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest._retry == false) {
       originalRequest._retry = true;
 
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        const response = await axios.post(
-          "http://127.0.0.1:8000/api/auth/token/refresh/",
-          { refresh: refreshToken }
-        );
+      // try {
+      //   const refreshToken = localStorage.getItem("refreshToken");
+      //   const response = await axios.post(
+      //     "http://127.0.0.1:8000/api/auth/token/refresh/",
+      //     {
+      //       refresh: refreshToken,
+      //     }
+      //   );
+      //   console.log(response);
 
-        const { access } = response.data;
-        localStorage.setItem("accessToken", access);
+      //   const { access } = response.data;
+      //   localStorage.setItem("accessToken", access);
 
-        // Update the authorization header
-        originalRequest.headers.Authorization = `Bearer ${access}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        // If refresh fails, logout user
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/auth/login";
-        return Promise.reject(refreshError);
-      }
+      //   // Update the authorization header
+      //   originalRequest.headers.Authorization = `Bearer ${access}`;
+      //   return api(originalRequest);
+      // } catch (refreshError) {
+      //   // If refresh fails, logout user
+      //   localStorage.removeItem("accessToken");
+      //   localStorage.removeItem("refreshToken");
+      //   window.location.href = "/auth/login";
+      //   return Promise.reject(refreshError);
+      // }
     }
 
     return Promise.reject(error);
@@ -104,26 +107,26 @@ api.interceptors.response.use(
 
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        const response = await axios.post(
-          "http://127.0.0.1:8000/api/auth/token/refresh/",
-          { refresh: refreshToken }
-        );
+    // if (error.response?.status === 401 && !originalRequest._retry) {
+    //   originalRequest._retry = true;
+    //   try {
+    //     const refreshToken = localStorage.getItem("refreshToken");
+    //     const response = await axios.post(
+    //       "http://127.0.0.1:8000/api/auth/token/refresh/",
+    //       { refresh: refreshToken }
+    //     );
 
-        const { access } = response.data;
-        localStorage.setItem("accessToken", access);
-        originalRequest.headers.Authorization = `Bearer ${access}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/auth/login";
-        return Promise.reject(refreshError);
-      }
-    }
+    //     const { access } = response.data;
+    //     localStorage.setItem("accessToken", access);
+    //     originalRequest.headers.Authorization = `Bearer ${access}`;
+    //     return api(originalRequest);
+    //   } catch (refreshError) {
+    //     localStorage.removeItem("accessToken");
+    //     localStorage.removeItem("refreshToken");
+    //     window.location.href = "/auth/login";
+    //     return Promise.reject(refreshError);
+    //   }
+    // }
 
     return Promise.reject(error);
   }

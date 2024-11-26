@@ -139,17 +139,26 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           academic_year: selectedAcademicYear,
         });
 
-        const response = await api.get("/templates/", {
+        // Make sure we're using the correct query parameters
+        const response = await api.get(`/templates/`, {
           params: {
             board: selectedBoard,
             academic_year: selectedAcademicYear,
           },
         });
 
-        if (response.data) {
+        // Log the response for debugging
+        console.log("Template response:", response);
+
+        // Check if response.data exists and is an array
+        if (Array.isArray(response.data)) {
           setTemplates(response.data);
+        } else if (response.data?.data && Array.isArray(response.data.data)) {
+          // If the response is wrapped in a data property
+          setTemplates(response.data.data);
         } else {
-          setError("No data received from server");
+          console.error("Unexpected response structure:", response.data);
+          setError("Invalid response format from server");
         }
       } catch (error) {
         console.error("Failed to fetch templates:", error);
@@ -161,7 +170,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       }
     };
 
-    fetchTemplates();
+    // Only fetch if we have both board and academic year
+    if (selectedBoard && selectedAcademicYear) {
+      fetchTemplates();
+    }
   }, [currentContext.showTemplates, selectedBoard, selectedAcademicYear]);
 
   const groupedTemplates = React.useMemo(() => {

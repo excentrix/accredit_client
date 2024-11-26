@@ -31,6 +31,10 @@ import {
 } from "@/components/ui/sidebar";
 import { useSettings } from "@/context/settings-context";
 import { Skeleton } from "@/components/ui/skeleton";
+import { use } from "react";
+import { useAuth } from "@/context/use-auth-context";
+import { showToast } from "@/lib/toast";
+import { useRouter } from "next/navigation";
 
 export function NavUser({
   user,
@@ -50,10 +54,23 @@ export function NavUser({
     boards,
     academicYears,
     isLoading,
+    currentBoard,
+    currentAcademicYear,
   } = useSettings();
 
-  const currentBoard = boards.find((b) => b.code === selectedBoard);
-  const currentYear = academicYears.find((y) => y.id === selectedAcademicYear);
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout(); // Clear auth context
+      router.push("/login");
+      showToast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      showToast.error("Failed to logout. Please try again.");
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -111,11 +128,11 @@ export function NavUser({
               <DropdownMenuSubContent>
                 {boards.map((board) => (
                   <DropdownMenuItem
-                    key={board.code}
-                    onClick={() => setSelectedBoard(board.code)}
+                    key={board.id}
+                    onClick={() => setSelectedBoard(board.id)}
                   >
                     <span>{board.name}</span>
-                    {board.code === selectedBoard && (
+                    {board.id === selectedBoard && (
                       <Check className="ml-auto h-4 w-4" />
                     )}
                   </DropdownMenuItem>
@@ -132,7 +149,7 @@ export function NavUser({
                   {isLoading ? (
                     <Skeleton className="h-4 w-20" />
                   ) : (
-                    currentYear?.name || "Select Year"
+                    currentAcademicYear?.name || "Select Year"
                   )}
                 </span>
               </DropdownMenuSubTrigger>
@@ -169,7 +186,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>

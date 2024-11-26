@@ -39,6 +39,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import api from "@/lib/api";
+import { useSettings } from "@/context/settings-context";
 
 interface Template {
   id: string;
@@ -53,6 +54,7 @@ export default function ExportPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const { selectedBoard, currentBoard } = useSettings();
 
   // Fetch current academic year
   const { data: currentAcademicYear, isLoading: isLoadingAcademicYear } =
@@ -66,24 +68,26 @@ export default function ExportPage() {
 
   // Fetch criteria
   const { data: criteria } = useQuery({
-    queryKey: ["criteria"],
+    queryKey: ["criteria", selectedBoard],
     queryFn: async () => {
-      const response = await api.get("/criteria/list/");
+      const response = await api.get(`/criteria/list/?board=${selectedBoard}`);
       return response.data;
     },
+    enabled: !!selectedBoard, // Only fetch when board is selected
   });
 
   // Fetch all templates
   const { data: templates, isLoading: isLoadingTemplates } = useQuery({
-    queryKey: ["templates", selectedCriterion],
+    queryKey: ["templates", selectedBoard, selectedCriterion],
     queryFn: async () => {
-      const response = await api.get(
-        selectedCriterion
-          ? `/templates/?criterion=${selectedCriterion}`
-          : "/templates/"
-      );
+      const params = new URLSearchParams();
+      if (selectedBoard) params.append("board", selectedBoard.toString());
+      if (selectedCriterion) params.append("criterion", selectedCriterion);
+
+      const response = await api.get(`/templates/?${params.toString()}`);
       return response.data;
     },
+    enabled: !!selectedBoard, // Only fetch when board is selected
   });
 
   // Filter templates based on search query
@@ -121,12 +125,18 @@ export default function ExportPage() {
         return;
       }
 
+      if (!selectedBoard) {
+        toast.error("No board selected");
+        return;
+      }
+
       setIsExporting(true);
       const loadingToast = toast.loading("Generating Excel file...");
 
       const queryParams = new URLSearchParams({
         type,
         academic_year: currentAcademicYear.id.toString(),
+        board: selectedBoard.toString(),
         ...(params?.criterion && { criterion: params.criterion }),
         ...(params?.template_code && { template_code: params.template_code }),
       });
@@ -187,13 +197,28 @@ export default function ExportPage() {
     }
   };
 
+  if (!selectedBoard) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">No Board Selected</h2>
+          <p className="text-muted-foreground">
+            Please select a board from the user menu to view and export
+            templates.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-6">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Export Data</h1>
           <p className="text-muted-foreground">
-            Export department submissions for {currentAcademicYear?.name}
+            Export department submissions for {currentBoard?.name} -{" "}
+            {currentAcademicYear?.name}
           </p>
         </div>
 
