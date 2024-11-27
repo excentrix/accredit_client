@@ -120,7 +120,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
   const currentContext =
     Object.entries(contextConfig).find(([path]) =>
       pathname.startsWith(path)
@@ -148,7 +147,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         });
 
         // Log the response for debugging
-        console.log("Template response:", response);
 
         // Check if response.data exists and is an array
         if (Array.isArray(response.data)) {
