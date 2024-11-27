@@ -1,9 +1,11 @@
+// providers/auth-provider.tsx
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect } from "react";
-import { User, AuthState } from "@/types/auth";
-import api from "@/lib/api";
+import React, { createContext, useReducer, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { User, AuthState } from "@/types/auth";
+import { authService } from "@/services";
+import * as tokenUtils from "@/lib/utils/token";
 
 interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<boolean>;
@@ -70,31 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: "AUTH_START" });
 
-      const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await authService.login({ username, password });
 
-      const data = await response.json();
-
-      if (data.status === "success" && data.data) {
-        // Set cookies instead of localStorage
-        document.cookie = `accessToken=${
-          data.data.tokens.access
-        }; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
-        document.cookie = `refreshToken=${
-          data.data.tokens.refresh
-        }; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
-
-        dispatch({ type: "AUTH_SUCCESS", payload: data.data.user });
+      if (response.status === "success" && response.data) {
+        const { user, tokens } = response.data;
+        tokenUtils.setTokenCookies(tokens);
+        dispatch({ type: "AUTH_SUCCESS", payload: user });
         router.push("/dashboard");
         return true;
       } else {
-        throw new Error(data.message || "Login failed");
+        throw new Error(response.message || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -107,16 +94,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch("http://127.0.0.1:8000/api/auth/logout/", {
-        method: "POST",
-        credentials: "include",
-      });
+      await authService.logout();
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Clear cookies
-      document.cookie = "accessToken=; path=/; max-age=0";
-      document.cookie = "refreshToken=; path=/; max-age=0";
+      tokenUtils.clearTokenCookies();
       dispatch({ type: "AUTH_LOGOUT" });
       router.push("/login");
     }
@@ -124,14 +106,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/auth/me/", {
-        credentials: "include",
-      });
+      const { accessToken, refreshToken } = tokenUtils.getTokenFromRequest({
+        cookies: {
+          get: (name: string) => ({
+            value:
+              document.cookie.match(new RegExp(`${name}=([^;]+)`))?.[1] || null,
+          }),
+        },
+      } as any);
 
-      const data = await response.json();
+      const { isValid, tokens } = await tokenUtils.validateTokens(
+        accessToken,
+        refreshToken
+      );
 
-      if (response.ok && data.status === "success") {
-        dispatch({ type: "AUTH_SUCCESS", payload: data.data });
+      if (!isValid) {
+        dispatch({ type: "AUTH_LOGOUT" });
+        return;
+      }
+
+      if (tokens && tokens !== { accessToken, refreshToken }) {
+        tokenUtils.setTokenCookies(tokens);
+      }
+
+      const response = await authService.getCurrentUser();
+
+      if (response.status === "success" && response.data) {
+        dispatch({ type: "AUTH_SUCCESS", payload: response.data });
       } else {
         dispatch({ type: "AUTH_LOGOUT" });
       }
@@ -152,10 +153,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+export { AuthContext };

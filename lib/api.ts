@@ -1,131 +1,117 @@
 // lib/api.ts
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { API_ENDPOINTS } from "@/config/constants";
+import { ApiResponse } from "@/types/auth";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Important for handling cookies
+  withCredentials: true,
 });
 
-// Add request interceptor for authentication
+// Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
+  async (config: InternalAxiosRequestConfig) => {
+    // Get token from cookie instead of localStorage
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("accessToken="))
+      ?.split("=")[1];
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add request ID for tracking
+    config.headers["X-Request-ID"] = crypto.randomUUID();
+
+    // Log request in development
+    if (process.env.NODE_ENV === "development") {
+      console.log("API Request:", {
+        url: config.url,
+        method: config.method,
+        data: config.data,
+        params: config.params,
+      });
+    }
+
     return config;
   },
-  (error) => {
+  (error: AxiosError) => {
+    console.error("Request Error:", error);
     return Promise.reject(error);
   }
 );
 
-// Add response interceptor for token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.data instanceof Blob) {
-      return Promise.reject(error);
-    }
-
-    // If error is 401 and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        const response = await axios.post(
-          "http://127.0.0.1:8000/api/auth/token/refresh/",
-          { refresh: refreshToken }
-        );
-
-        const { access } = response.data;
-        localStorage.setItem("accessToken", access);
-
-        // Update the authorization header
-        originalRequest.headers.Authorization = `Bearer ${access}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        // If refresh fails, logout user
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/auth/login";
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-// lib/api.ts
-
-// Add request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    console.log("API Request:", {
-      url: config.url,
-      method: config.method,
-      headers: config.headers,
-    });
-    return config;
-  },
-  (error) => {
-    console.error("API Request Error:", error);
-    return Promise.reject(error);
-  }
-);
-
-// Add response interceptor
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log("API Response:", {
-      url: response.config.url,
-      status: response.status,
-      data: response.data,
-    });
+    // Log response in development
+    if (process.env.NODE_ENV === "development") {
+      console.log("API Response:", {
+        url: response.config.url,
+        status: response.status,
+        data: response.data,
+      });
+    }
+
     return response;
   },
-  async (error) => {
-    console.error("API Response Error:", {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+  async (error: AxiosError<ApiResponse<any>>) => {
+    const originalRequest = error.config as any;
 
-    const originalRequest = error.config;
-
+    // Handle token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("refreshToken="))
+          ?.split("=")[1];
+
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/auth/token/refresh/",
+          `${process.env.NEXT_PUBLIC_API_URL}${API_ENDPOINTS.AUTH.REFRESH}`,
           { refresh: refreshToken }
         );
 
         const { access } = response.data;
-        localStorage.setItem("accessToken", access);
+
+        // Update cookies
+        document.cookie = `accessToken=${access}; path=/; max-age=${
+          60 * 60 * 24 * 7
+        }; samesite=lax`;
+
+        // Retry original request
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
       } catch (refreshError) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/auth/login";
+        // Clear cookies and redirect to login
+        document.cookie =
+          "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+        document.cookie =
+          "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
 
-    return Promise.reject(error);
+    // Handle network errors
+    if (!error.response) {
+      return Promise.reject({
+        message: "Network error. Please check your connection.",
+        status: "error",
+      });
+    }
+
+    // Handle other errors
+    return Promise.reject(error.response.data);
   }
 );
 

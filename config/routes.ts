@@ -1,54 +1,92 @@
+// config/routes.ts
 import { AppRoute } from "@/types/routes";
 
+export const PUBLIC_ROUTES = ["/login", "/forgot-password"] as const;
+
+export const DEFAULT_REDIRECT = {
+  faculty: "/data-entry",
+  iqac_director: "/dashboard",
+  admin: "/dashboard",
+} as const;
+
 export const ROUTES: Record<string, AppRoute> = {
+  login: {
+    path: "/login",
+    permission: {
+      roles: ["faculty", "iqac_director", "admin"],
+    },
+    title: "Login",
+    description: "Login to your account",
+  },
   dashboard: {
     path: "/dashboard",
     permission: {
       roles: ["faculty", "iqac_director", "admin"],
     },
     title: "Dashboard",
+    description: "Overview of your data and submissions",
   },
-  data: {
-    path: "/data",
+  dataEntry: {
+    path: "/data-entry",
     permission: {
       roles: ["faculty", "iqac_director", "admin"],
     },
-    title: "Data",
+    title: "Data Entry",
+    description: "Enter and manage your data submissions",
+  },
+  submissions: {
+    path: "/submissions",
+    permission: {
+      roles: ["iqac_director", "admin"],
+      redirect: "/dashboard",
+    },
+    title: "Submissions",
+    description: "Review and manage submissions",
   },
   templateManagement: {
     path: "/template-management",
     permission: {
       roles: ["iqac_director", "admin"],
+      redirect: "/dashboard",
     },
     title: "Template Management",
-    description: "Manage and review department submissions",
+    description: "Manage data collection templates",
   },
-  templates: {
-    path: "/templates",
+  export: {
+    path: "/export",
     permission: {
       roles: ["iqac_director", "admin"],
+      redirect: "/dashboard",
     },
-    title: "Template Management",
+    title: "Export",
+    description: "Export data and reports",
   },
-  users: {
-    path: "/users",
+  admin: {
+    path: "/admin",
     permission: {
       roles: ["admin"],
+      redirect: "/dashboard",
     },
-    title: "User Management",
+    title: "Admin",
+    description: "Administrative controls and settings",
   },
-  departments: {
-    path: "/departments",
-    permission: {
-      roles: ["admin"],
-    },
-    title: "Department Management",
-  },
-  settings: {
-    path: "/settings",
-    permission: {
-      roles: ["admin"],
-    },
-    title: "System Settings",
-  },
-};
+} as const;
+
+export const NAVIGATION = {
+  faculty: [ROUTES.dashboard, ROUTES.dataEntry],
+  iqac_director: [
+    ROUTES.dashboard,
+    ROUTES.dataEntry,
+    ROUTES.submissions,
+    ROUTES.templateManagement,
+    ROUTES.export,
+  ],
+  admin: [
+    ROUTES.dashboard,
+    ROUTES.dataEntry,
+    ROUTES.submissions,
+    ROUTES.templateManagement,
+    ROUTES.export,
+    ROUTES.admin,
+  ],
+} as const;

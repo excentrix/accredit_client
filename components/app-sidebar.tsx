@@ -27,13 +27,6 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Collapsible,
   CollapsibleContent,
@@ -45,7 +38,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Template } from "@/types/template";
-import { Board } from "@/types/board";
 import api from "@/lib/api";
 import { NavUser } from "./nav-user";
 import path from "path";

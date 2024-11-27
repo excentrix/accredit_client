@@ -1,3 +1,4 @@
+// types/auth.ts
 export type UserRole = "faculty" | "iqac_director" | "admin";
 
 export interface User {
@@ -12,6 +13,9 @@ export interface User {
     name: string;
     code: string;
   };
+  is_active: boolean;
+  last_login?: string;
+  date_joined: string;
 }
 
 export interface AuthState {
@@ -33,23 +37,11 @@ export interface LoginResponse {
   message?: string;
 }
 
-export interface Department {
-  id: number;
-  name: string;
-  code: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
-// types/api.ts
-export interface ApiResponse<T> {
-  status: "success" | "error";
-  data?: T;
-  message?: string;
-  errors?: Record<string, string[]>;
+export interface TokenPayload {
+  token_type: string;
+  exp: number;
+  iat: number;
+  jti: string;
+  user_id: number;
+  role: UserRole;
 }
