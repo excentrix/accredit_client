@@ -118,7 +118,7 @@ function generateHeaders(
   headerRows: TableHeader[][];
   maxDepth: number;
 } {
-  let maxDepth = 1;
+  let maxDepth = 0;
   const headerMap = new Map<number, TableHeader[]>();
 
   function processColumn(
@@ -129,47 +129,55 @@ function generateHeaders(
     const sanitizedName = sanitizeColumnName(column.name);
     const currentPath = [...path, sanitizedName];
 
+    // Ensure the row exists in the header map
+    if (!headerMap.has(depth)) headerMap.set(depth, []);
+
     if (column.type === "group" && column.columns?.length) {
+      // Calculate the total colSpan for the group by recursively processing its children
+      const colSpan = column.columns.reduce(
+        (sum, subColumn) => sum + processColumn(subColumn, depth + 1, currentPath),
+        0
+      );
+
       // Add the group header
-      if (!headerMap.has(depth)) headerMap.set(depth, []);
       headerMap.get(depth)!.push({
         id: currentPath.join("_"),
         label: column.name,
-        colSpan: column.columns.length,
-        rowSpan: 1,
+        colSpan,
+        rowSpan: 1, // Groups always span one row
         path: currentPath,
       });
 
-      // Add individual column headers in the next row
-      if (!headerMap.has(depth + 1)) headerMap.set(depth + 1, []);
-      column.columns.forEach((subColumn) => {
-        headerMap.get(depth + 1)!.push({
-          id: `${currentPath.join("_")}_${sanitizeColumnName(subColumn.name)}`,
-          label: subColumn.name,
-          colSpan: 1,
-          rowSpan: 1,
-          path: [...currentPath, sanitizeColumnName(subColumn.name)],
-          data_type: subColumn.data_type,
-        });
-      });
-
-      maxDepth = Math.max(maxDepth, depth + 2);
-      return column.columns.length;
+      maxDepth = Math.max(maxDepth, depth + 1); // Update max depth
+      return colSpan;
     } else {
-      if (!headerMap.has(depth)) headerMap.set(depth, []);
+      // Individual column header
       headerMap.get(depth)!.push({
         id: currentPath.join("_"),
         label: column.name,
         colSpan: 1,
-        rowSpan: maxDepth - depth,
+        rowSpan: 1, // Temporary, adjusted below
         path: currentPath,
         data_type: column.data_type,
       });
-      return 1;
+
+      maxDepth = Math.max(maxDepth, depth + 1); // Update max depth
+      return 1; // Single column contributes colSpan = 1
     }
   }
 
+  // Process each top-level column
   columns.forEach((column) => processColumn(column));
+
+  // Adjust rowSpan for individual headers
+  headerMap.forEach((headers, depth) => {
+    headers.forEach((header) => {
+      if (!header.colSpan || header.colSpan === 1) {
+        header.rowSpan = maxDepth - depth; // Individual columns span remaining rows
+      }
+    });
+  });
+
   return {
     headerRows: Array.from(
       { length: maxDepth },
@@ -364,15 +372,15 @@ export function SectionDataTable({
     rowIndex: number,
     colIndex: number
   ) => {
-    // if (process.env.NODE_ENV === "development") {
-    //   console.log("Cell debug:", {
-    //     column: column.name,
-    //     path: column.path,
-    //     flattenedKey: column.path.join("_"),
-    //     rowData: row.data,
-    //     value: getNestedValue(row.data, column.path),
-    //   });
-    // }
+    if (process.env.NODE_ENV === "development") {
+      console.log("Cell debug:", {
+        column: column.name,
+        path: column.path,
+        flattenedKey: column.path.join("_"),
+        rowData: row.data,
+        value: getNestedValue(row.data, column.path),
+      });
+    }
 
     if (editingRow === rowIndex) {
       const currentValue = getNestedValue(editedData, column.path);
@@ -460,8 +468,8 @@ export function SectionDataTable({
             {headerRows.map((row, rowIndex) => (
               <TableRow key={rowIndex} className="bg-muted/50">
                 {rowIndex === 0 && (
-                  <TableHead rowSpan={maxDepth} style={{ width: 100 }}>
-                    Actions
+                  <TableHead rowSpan={headerRows.length} style={{ width: 100 }}>
+                    Action
                   </TableHead>
                 )}
                 {row.map((header) => (
