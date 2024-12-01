@@ -74,19 +74,30 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>): JSX.Element
+{
   return (
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
           <SettingsProvider>
-            <AuthenticatedLayout>{children}</AuthenticatedLayout>
+            <ContentWrapper>{children}</ContentWrapper>
             <Toaster />
           </SettingsProvider>
         </AuthProvider>
       </body>
     </html>
+  );
+}
+
+function ContentWrapper({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
+
+  return isAuthenticated ? (
+    <AuthenticatedLayout>{children}</AuthenticatedLayout>
+  ) : (
+    children
   );
 }
