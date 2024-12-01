@@ -1,7 +1,8 @@
 // contexts/TemplateContext.tsx
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { Template } from "@/types/template";
-import api from "@/lib/api";
+import api from "@/services/api";
+import { sectionDataServices } from "@/services/core";
 
 interface TemplateContextType {
   activeSection: number;
@@ -34,17 +35,19 @@ export function TemplateProvider({
       setError((prev) => ({ ...prev, [sectionIndex]: null }));
 
       try {
-        const response = await api.get(
-          `/templates/${template.code}/sections/${sectionIndex}/data/`
+        const response = await sectionDataServices.fetchSectionData(
+          template.code,
+          sectionIndex
         );
 
-        if (response.data.status === "success") {
+        if (response.status === "success") {
           setSectionData((prev) => ({
             ...prev,
-            [sectionIndex]: response.data.data.rows,
+            [sectionIndex]: response.data.rows,
           }));
         }
       } catch (err: any) {
+        console.log("err", err);
         setError((prev) => ({
           ...prev,
           [sectionIndex]: err.response?.data?.message || "Failed to fetch data",

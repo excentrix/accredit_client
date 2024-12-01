@@ -30,9 +30,10 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle, Loader2, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { showToast } from "@/lib/toast";
 import { useSettings } from "@/context/settings-context";
+import { criteriaServices, templateServices } from "@/services/core";
 
 // Interfaces
 interface AddTemplateFormProps {
@@ -548,9 +549,13 @@ export function AddTemplateForm({
   // Update criteria query to use board code
   const { data: criteria, isLoading: isLoadingCriteria } = useQuery({
     queryKey: ["criteria", selectedBoard],
+
     queryFn: async () => {
-      const response = await api.get(`/criteria/list/?board=${selectedBoard}`);
-      return response.data;
+      const params = new URLSearchParams();
+      if (selectedBoard) params.append("board", selectedBoard.toString());
+      const response = await criteriaServices.fetchCriteriaList(params);
+      console.log("Criteria response:", response.results);
+      return response.results;
     },
     enabled: !!selectedBoard,
   });
@@ -705,10 +710,10 @@ export function AddTemplateForm({
       };
 
       if (initialData) {
-        await api.put(`/templates/${initialData.code}/`, sanitizedData);
+        await templateServices.updateTemplate(initialData.code, sanitizedData);
         showToast.success("Template updated successfully");
       } else {
-        await api.post("/templates/", sanitizedData);
+        await templateServices.createTemplate(sanitizedData);
         showToast.success("Template created successfully");
       }
       onSuccess();

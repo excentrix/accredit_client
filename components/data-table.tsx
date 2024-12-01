@@ -24,7 +24,7 @@ import {
 import { Template } from "@/types/template";
 import { DataEntryForm } from "./data-entry-form";
 import { useToast } from "./ui/use-toast";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -44,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { debounce } from "lodash";
+import { sectionDataServices, templateDataServices } from "@/services/core";
 
 interface DataTableProps {
   template: Template;
@@ -54,7 +55,7 @@ export function DataTable({ template }: DataTableProps) {
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
-    template.metadata.flatMap((item: any) => 
+    template.metadata.flatMap((item: any) =>
       item.columns.map((col: any) => col.name)
     )
   );
@@ -90,7 +91,10 @@ export function DataTable({ template }: DataTableProps) {
 
   const refreshData = async () => {
     try {
-      const response = await api.get(`/templates/${template.code}/data/`);
+      const response = await templateDataServices.fetchTemplateData(
+        template.code
+      );
+
       if (response.data.status === "success") {
         setData(response.data.data.rows);
         setFilteredData(response.data.data.rows);
@@ -131,14 +135,13 @@ export function DataTable({ template }: DataTableProps) {
 
   const handleSave = async (rowIndex: number) => {
     try {
-      const response = await api.put(
-        `/templates/${template.code}/data/row/?row_id=${data[rowIndex].id}`,
-        {
-          data: editedData,
-        }
+      const response = await templateDataServices.updateDataRow(
+        template.code,
+        data[rowIndex].id,
+        editedData
       );
 
-      if (response.data.status === "success") {
+      if (response.status === "success") {
         toast({
           title: "Success",
           description: "Data updated successfully",
@@ -164,8 +167,9 @@ export function DataTable({ template }: DataTableProps) {
 
   const handleDelete = async (rowIndex: number) => {
     try {
-      const response = await api.delete(
-        `/templates/${template.code}/data/row/?row_id=${data[rowIndex].id}`
+      const response = await templateDataServices.deleteDataRow(
+        template.code,
+        data[rowIndex].id
       );
 
       if (response.data.status === "success") {

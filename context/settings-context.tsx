@@ -2,10 +2,11 @@
 "use client";
 import { useAuth } from "@/context/use-auth-context";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import api from "@/lib/api";
+
 import { AcademicYear } from "@/types/academic-year";
 import { Board } from "@/types/board";
 import { useRouter } from "next/navigation";
+import api from "@/services/api";
 // import localStorage from "local-";
 
 interface SettingsContextType {
@@ -76,8 +77,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setError(null);
 
         const [boardsResponse, yearsResponse] = await Promise.all([
-          api.get("/boards/"),
-          api.get("/academic-years/"),
+          api.get("/api/boards/"),
+          api.get("/api/academic-years/"),
         ]);
 
         setBoards(boardsResponse.data);

@@ -4,14 +4,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, ListChecks, Clock, CheckCircle, XCircle } from "lucide-react";
-import api from "@/lib/api";
+import api from "@/services/api";
+import { submissionStatsServices } from "@/services/core";
 
 export function SubmissionStats() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ["submission-stats"],
     queryFn: async () => {
-      const response = await api.get("/submissions/stats/");
-      return response.data.data;
+      const response = await submissionStatsServices.fetchSubmissionStats();
+      
+      return response.data;
     },
   });
 

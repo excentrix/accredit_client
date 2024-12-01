@@ -7,7 +7,8 @@ import React, {
 } from "react";
 import { SubmissionState } from "@/types/submission";
 import { showToast } from "@/lib/toast";
-import api from "@/lib/api";
+import api from "@/services/api";
+import { templateServices, templateSubmissionServices } from "@/services/core";
 
 interface SubmissionContextType {
   submissionState: SubmissionState | null;
@@ -50,11 +51,11 @@ export function SubmissionProvider({
       try {
         if (showLoadingState) setIsLoading(true);
 
-        const response = await api.get(
-          `/templates/${templateCode}/submission/`
-        );
-        if (response.data.status === "success") {
-          const newState = response.data.data;
+        const response = await templateServices.fetchSubmissions(templateCode);
+        console.log('subs', response);
+
+        if (response.status === "success") {
+          const newState = response.data;
           setSubmissionState((prevState) => {
             // Only update if the state has actually changed
             if (JSON.stringify(prevState) !== JSON.stringify(newState)) {
@@ -150,12 +151,13 @@ export function SubmissionProvider({
     setIsSubmitting(true);
 
     try {
-      const response = await api.post(`/templates/${templateCode}/submit/`);
-
-      if (response.data.status === "success") {
+      const response = await templateSubmissionServices.submitTemplate(
+        templateCode
+      );
+      if (response.status === "success") {
         showToast.dismiss(loadingToast);
         showToast.success("Template submitted successfully");
-        setSubmissionState(response.data.data);
+        setSubmissionState(response.data);
         setHasUnsavedChanges(false);
       }
     } catch (error: any) {
@@ -178,7 +180,9 @@ export function SubmissionProvider({
     setIsSubmitting(true);
 
     try {
-      const response = await api.post(`/templates/${templateCode}/withdraw/`);
+      const response = await templateSubmissionServices.withdrawSubmission(
+        templateCode
+      );
 
       if (response.data.status === "success") {
         showToast.dismiss(loadingToast);

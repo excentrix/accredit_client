@@ -22,7 +22,7 @@ export function SubmissionStatus() {
     withdrawSubmission,
   } = useSubmission();
 
-  console.log(submissionState?.status);
+  console.log(submissionState);
 
   if (isLoading) {
     return (

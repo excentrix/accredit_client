@@ -46,10 +46,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import api from "@/lib/api";
+import api from "@/services/api";
 
 import { SubmissionTimeline } from "./submission-timeline";
 import { DiffViewer } from "./diff-viewer";
+import { submissionStatsServices } from "@/services/core";
 
 interface SubmissionReviewProps {
   submissionId: string;
@@ -68,31 +69,35 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
     refetch,
   } = useQuery({
     queryKey: ["submission", submissionId],
-    queryFn: async () => {
-      const response = await api.get(`/submissions/${submissionId}/`);
-      return response.data;
-    },
+    queryFn: () => submissionStatsServices.fetchSubmissionById(submissionId),
   });
 
-  const handleApprove = async () => {
+  const handleApprove = async (submissionId: string, refetch: () => void) => {
     try {
-      await api.post(`/submissions/${submissionId}/approve/`);
+      await submissionStatsServices.approveSubmission(submissionId);
       toast.success("Submission approved successfully");
-      refetch();
+      refetch(); // Refresh the data after approving
     } catch (error) {
       toast.error("Failed to approve submission");
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (
+    submissionId: string,
+    rejectionReason: string,
+    refetch: () => void,
+    setIsRejectDialogOpen: (open: boolean) => void,
+    setRejectionReason: (reason: string) => void
+  ) => {
     try {
-      await api.post(`/submissions/${submissionId}/reject/`, {
-        reason: rejectionReason,
-      });
-      setIsRejectDialogOpen(false);
-      setRejectionReason("");
+      await submissionStatsServices.rejectSubmission(
+        submissionId,
+        rejectionReason
+      );
+      setIsRejectDialogOpen(false); // Close rejection dialog
+      setRejectionReason(""); // Reset rejection reason
       toast.success("Submission rejected successfully");
-      refetch();
+      refetch(); // Refresh the data after rejecting
     } catch (error) {
       toast.error("Failed to reject submission");
     }
@@ -502,7 +507,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
             </Button>
             <Button
               variant="default"
-              onClick={handleApprove}
+              onClick={() => handleApprove(submissionId, refetch)}
               disabled={submission.status !== "submitted"}
             >
               <CheckCircle className="mr-2 h-4 w-4" />
@@ -538,7 +543,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleReject}
+              onClick={() => handleReject(submissionId, rejectionReason, refetch, setIsRejectDialogOpen, setRejectionReason)}
               disabled={!rejectionReason}
             >
               Reject Submission

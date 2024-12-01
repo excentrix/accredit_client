@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit2, Check, X, Trash2, Search, Filter, Loader2 } from "lucide-react";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -35,6 +35,7 @@ import { Template } from "@/types/template";
 import { showToast } from "@/lib/toast";
 import { useTemplate } from "@/context/template-context";
 import { useSubmission } from "@/context/submission-context";
+import { sectionDataServices } from "@/services/core";
 
 interface Column {
   name: string;
@@ -135,7 +136,8 @@ function generateHeaders(
     if (column.type === "group" && column.columns?.length) {
       // Calculate the total colSpan for the group by recursively processing its children
       const colSpan = column.columns.reduce(
-        (sum, subColumn) => sum + processColumn(subColumn, depth + 1, currentPath),
+        (sum, subColumn) =>
+          sum + processColumn(subColumn, depth + 1, currentPath),
         0
       );
 
@@ -322,12 +324,14 @@ export function SectionDataTable({
 
       console.log("Saving data:", dataToSend); // Debug log
 
-      const response = await api.put(
-        `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`,
+      const response = await sectionDataServices.updateSectionDataRow(
+        template.code,
+        sectionIndex,
+        currentData[rowIndex].id,
         dataToSend
       );
 
-      if (response.data.status === "success") {
+      if (response.status === "success") {
         showToast.dismiss(loadingToast);
         showToast.success("Data updated successfully");
         await refreshSectionData(sectionIndex);
@@ -349,11 +353,13 @@ export function SectionDataTable({
     const loadingToast = showToast.loading("Deleting data...");
     try {
       const currentData = sectionData[sectionIndex] || [];
-      const response = await api.delete(
-        `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`
-      );
 
-      if (response.data.status === "success") {
+      const response = await sectionDataServices.deleteRowInSection(
+        template.code,
+        sectionIndex,
+        currentData[rowIndex].id
+      );
+      if (response.status === "success") {
         showToast.dismiss(loadingToast);
         showToast.success("Data deleted successfully");
         await refreshSectionData(sectionIndex);

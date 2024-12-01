@@ -15,16 +15,13 @@ import { Plus, Edit, Trash2, FileDown, FileUp } from "lucide-react";
 
 import { Template } from "@/types/template";
 import { useSettings } from "@/context/settings-context";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
+import { templateServices } from "@/services/core";
 
 export function TemplateManager() {
-
-  const {
-    selectedBoard,
-    selectedAcademicYear,
-  } = useSettings();
+  const { selectedBoard, selectedAcademicYear } = useSettings();
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,13 +30,11 @@ export function TemplateManager() {
   const fetchTemplates = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get("/templates/", {
-        params: {
-          board: selectedBoard,
-          academic_year: selectedAcademicYear,
-        },
-      })
-      setTemplates(response.data);
+      const response = await templateServices.fetchTemplates({
+        board: selectedBoard,
+        academic_year: selectedAcademicYear,
+      });
+      setTemplates(response);
     } catch (error) {
       showToast.error("Failed to fetch templates");
     } finally {
@@ -59,7 +54,7 @@ export function TemplateManager() {
     if (!confirm("Are you sure you want to delete this template?")) return;
 
     try {
-      await api.delete(`/templates/${template.code}/`);
+      await templateServices.deleteTemplate(template.code);
       showToast.success("Template deleted successfully");
       fetchTemplates();
     } catch (error) {

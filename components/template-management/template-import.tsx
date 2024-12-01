@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload } from "lucide-react";
 
-import api from "@/lib/api";
+import api from "@/services/api";
 import { showToast } from "@/lib/toast";
 
 export function TemplateImport({ onSuccess }: { onSuccess: () => void }) {

@@ -13,8 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
-import api from "@/lib/api";
+import api from "@/services/api";
 import { showToast } from "@/lib/toast";
+import { criteriaServices } from "@/services/core";
 
 interface Criterion {
   id: number;
@@ -35,8 +36,8 @@ export function CriteriaManager() {
   const fetchCriteria = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get("/criteria/");
-      setCriteria(response.data);
+      // const response = await criteriaServices.fetchCriteriaList();
+      // setCriteria(response.data);
     } catch (error) {
       showToast.error("Failed to fetch criteria");
     } finally {

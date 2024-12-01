@@ -32,11 +32,13 @@ import {
 } from "lucide-react";
 import { formatDistance, format } from "date-fns";
 import { showToast } from "@/lib/toast";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { SubmissionReview } from "./submission-review";
 import { useQuery } from "@tanstack/react-query";
 import { SubmissionStats } from "./submission-stats";
 import { useRouter } from "next/navigation";
+import { submissionStatsServices } from "@/services/core";
+import userManagementService from "@/services/user_mangement";
 
 const statusColors = {
   draft: "bg-gray-500",
@@ -78,8 +80,9 @@ export function SubmissionList() {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await api.get("/departments/");
-        setDepartments(response.data);
+        const response = await userManagementService.fetchDepartments();
+        // console.log(departments);
+        setDepartments(response);
       } catch (error) {
         console.error("Failed to fetch departments:", error);
       }
@@ -94,18 +97,12 @@ export function SubmissionList() {
     refetch,
   } = useQuery({
     queryKey: ["submissions", searchQuery, statusFilter, departmentFilter],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (searchQuery) params.append("search", searchQuery);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (departmentFilter !== "all")
-        params.append("department", departmentFilter);
-
-      const response = await api.get(
-        `/submissions/current_academic_year/?${params.toString()}`
-      );
-      return response.data;
-    },
+    queryFn: () =>
+      submissionStatsServices.fetchCurrentAcademicYearSubmissions({
+        searchQuery,
+        statusFilter,
+        departmentFilter,
+      }),
   });
 
   return (

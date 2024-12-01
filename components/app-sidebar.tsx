@@ -46,11 +46,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Template } from "@/types/template";
 import { Board } from "@/types/board";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { NavUser } from "./nav-user";
 import path from "path";
 import { useSettings } from "@/context/settings-context";
 import { useRouter } from "next/navigation";
+import { templateServices } from "@/services/core";
 
 const mainNavItems = [
   {
@@ -127,7 +128,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       pathname.startsWith(path)
     )?.[1] || contextConfig["/dashboard"];
 
-
   useEffect(() => {
     // Redirect based on selected menu item (determined by the path or some logic)
     if (selectedBoard && selectedAcademicYear) {
@@ -155,21 +155,17 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         });
 
         // Make sure we're using the correct query parameters
-        const response = await api.get(`/templates/`, {
-          params: {
-            board: selectedBoard,
-            academic_year: selectedAcademicYear,
-          },
+        const response = await templateServices.fetchTemplates({
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
         });
 
-        // Log the response for debugging
-
         // Check if response.data exists and is an array
-        if (Array.isArray(response.data)) {
-          setTemplates(response.data);
-        } else if (response.data?.data && Array.isArray(response.data.data)) {
+        if (Array.isArray(response)) {
+          setTemplates(response);
+        } else if (response.data && Array.isArray(response.data)) {
           // If the response is wrapped in a data property
-          setTemplates(response.data.data);
+          setTemplates(response.data);
         } else {
           console.error("Unexpected response structure:", response.data);
           setError("Invalid response format from server");

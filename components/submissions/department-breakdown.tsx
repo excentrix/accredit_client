@@ -34,7 +34,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
+import api from "@/services/api";
 import {
   Select,
   SelectContent,
@@ -44,6 +44,7 @@ import {
 } from "../ui/select";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { academicYearServices, submissionStatsServices } from "@/services/core";
 
 interface DepartmentBreakdownProps {
   initialAcademicYear?: number; // Changed to number for ID
@@ -66,8 +67,8 @@ export function DepartmentBreakdown({
   const { data: academicYearsResponse, isLoading: isLoadingYears } = useQuery({
     queryKey: ["academic-years"],
     queryFn: async () => {
-      const response = await api.get("/academic-years/");
-      return response.data;
+      const response = await academicYearServices.fetchAcademicYears();
+      return response;
     },
   });
 
@@ -79,10 +80,10 @@ export function DepartmentBreakdown({
   } = useQuery({
     queryKey: ["department-breakdown", selectedYear],
     queryFn: async () => {
-      const response = await api.get("/submissions/department-breakdown/", {
-        params: { academic_year: selectedYear },
-      });
-      return response.data.data;
+      const response = await submissionStatsServices.fetchDepartmentBreakdown(
+        selectedYear
+      );
+      return response.data;
     },
     enabled: !!selectedYear,
   });

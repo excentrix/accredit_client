@@ -33,8 +33,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Template } from "@/types/template";
 import { Plus } from "lucide-react";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { showToast } from "@/lib/toast";
+import { templateDataServices } from "@/services/core";
 
 interface DataEntryFormProps {
   template: Template;
@@ -49,30 +50,6 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchSuggestions = async (input: string) => {
-    setLoading(true);
-    try {
-      const response = await api.get(`/autocomplete/?q=${input}`);
-      if (response.status === 200) {
-        console.log("respopse$$$$: ", response);
-        setSuggestions(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching autocomplete suggestions:", error);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (query.length > 0) {
-      // Fetch suggestions only if the input length is more than 1 character
-      fetchSuggestions(query);
-      console.log("query : ", query);
-      console.log("suggestions : ", suggestions);
-    } else {
-      setSuggestions([]);
-    }
-  }, [query]);
 
   // Create a schema shape based on template columns
   const schemaShape: { [key: string]: z.ZodType<any, any> } = {};
@@ -160,9 +137,10 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
         return sectionValues;
       });
 
-      const response = await api.post(`/templates/${template.code}/data/`, {
-        sections: sectionData,
-      });
+      const response = await templateDataServices.updateTemplateData(
+        template.code,
+        { sections: sectionData }
+      );
 
       if (response.data.status === "success") {
         showToast.success("Data entry has been saved successfully.");
