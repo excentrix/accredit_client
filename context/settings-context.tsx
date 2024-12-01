@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "@/lib/api";
 import { AcademicYear } from "@/types/academic-year";
 import { Board } from "@/types/board";
+import { useRouter } from "next/navigation";
 // import localStorage from "local-";
 
 interface SettingsContextType {
@@ -49,6 +50,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth(); 
+
+  const router = useRouter();
 
   // Client-side only localStorage access
   useEffect(() => {
@@ -136,6 +139,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const handleSetBoard = (boardId: number) => {
     if (boards.find((b) => b.id === boardId)) {
       setSelectedBoard(boardId);
+      
       if (typeof window !== "undefined"){
         localStorage.setItem(STORAGE_KEYS.SELECTED_BOARD, boardId.toString());
       }

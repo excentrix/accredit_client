@@ -50,6 +50,7 @@ import api from "@/lib/api";
 import { NavUser } from "./nav-user";
 import path from "path";
 import { useSettings } from "@/context/settings-context";
+import { useRouter } from "next/navigation";
 
 const mainNavItems = [
   {
@@ -115,6 +116,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
 
   const { user } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -124,6 +126,20 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     Object.entries(contextConfig).find(([path]) =>
       pathname.startsWith(path)
     )?.[1] || contextConfig["/dashboard"];
+
+
+  useEffect(() => {
+    // Redirect based on selected menu item (determined by the path or some logic)
+    if (selectedBoard && selectedAcademicYear) {
+      const currentBasePath = pathname.startsWith("/dashboard/data")
+        ? "/dashboard/data"
+        : pathname.startsWith("/dashboard/template-management")
+        ? "/dashboard/template-management"
+        : "/dashboard";
+
+      router.push(currentBasePath, undefined);
+    }
+  }, [selectedBoard, selectedAcademicYear]);
 
   useEffect(() => {
     const fetchTemplates = async () => {

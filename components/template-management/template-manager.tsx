@@ -14,12 +14,18 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, FileDown, FileUp } from "lucide-react";
 
 import { Template } from "@/types/template";
-
+import { useSettings } from "@/context/settings-context";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
 
 export function TemplateManager() {
+
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
+
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -27,7 +33,12 @@ export function TemplateManager() {
   const fetchTemplates = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get("/templates/");
+      const response = await api.get("/templates/", {
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+        },
+      })
       setTemplates(response.data);
     } catch (error) {
       showToast.error("Failed to fetch templates");
@@ -38,7 +49,7 @@ export function TemplateManager() {
 
   useEffect(() => {
     fetchTemplates();
-  }, []);
+  }, [selectedAcademicYear, selectedBoard]);
 
   const handleEdit = (template: Template) => {
     router.push(`/dashboard/template-management/edit?code=${template.code}`);
