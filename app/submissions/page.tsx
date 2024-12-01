@@ -39,7 +39,6 @@ export default function IQACSubmissionsPage() {
             </Link>
           </Button>
         </div>
-
         <SubmissionList />
         <DepartmentBreakdown initialAcademicYear={currentYear?.id} />
       </div>

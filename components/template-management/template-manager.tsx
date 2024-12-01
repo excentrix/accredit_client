@@ -126,38 +126,31 @@ export function TemplateManager() {
               templates.map((template) => (
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">{template.code}</TableCell>
-                  <TableCell>{template.name}</TableCell>
+                  <TableCell className="max-w-md">{template.name}</TableCell>
                   <TableCell>
                     {template.metadata.map((item: any, index: number) => (
-                      <div key={index} className="mb-4">
-                        {/* Display Section Info */}
-                        <div className="font-semibold mb-2 text-primary">
+                      <div key={index} className="mb-2">
+                        {/* Section Title */}
+                        <div className="font-semibold text-primary mb-2">
                           Section {index + 1}
                         </div>
 
-                        {/* Display Headers */}
+                        {/* List of Headers */}
                         {item.headers && item.headers.length > 0 && (
-                          <div className="text-sm text-gray-600 mb-2">
-                            <strong>Headers:</strong>
-                            <ul className="list-disc pl-5">
-                              {item.headers.map(
-                                (header: string, headerIndex: number) => (
-                                  <li
-                                    key={headerIndex}
-                                    className="truncate text-sm text-gray-800"
-                                  >
-                                    {header}
-                                  </li>
-                                )
-                              )}
-                            </ul>
-                          </div>
+                          <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
+                            {item.headers.map((header: string, headerIndex: number) => (
+                              <li key={headerIndex}>{header}</li>
+                            ))}
+                          </ul>
                         )}
-
-                        {/* Display Columns */}
+                      </div>
+                    ))}
+                  </TableCell>
+                  <TableCell>
+                    {template.metadata.map((item: any, index: number) => (
+                      <span key={index}>
                         {item.columns && item.columns.length > 0 && (
-                          <div className="text-sm text-gray-600">
-                            <strong>Columns:</strong>
+                          <span className="text-sm text-gray-800">
                             <ul className="list-disc pl-5">
                               {item.columns.map(
                                 (column: any, columnIndex: number) => (
@@ -165,19 +158,19 @@ export function TemplateManager() {
                                     key={columnIndex}
                                     className="flex justify-between"
                                   >
-                                    <span className="truncate">
+                                    <span className="truncate max-w-[200px]">
                                       {column.name}
                                     </span>
-                                    <span className="ml-2 text-xs text-gray-400">
+                                    <span className=" text-xs text-gray-400">
                                       ({column.data_type})
                                     </span>
                                   </li>
                                 )
                               )}
                             </ul>
-                          </div>
+                          </span>
                         )}
-                      </div>
+                      </span>
                     ))}
                   </TableCell>
 

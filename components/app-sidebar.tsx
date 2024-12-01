@@ -61,33 +61,33 @@ const mainNavItems = [
   {
     title: "Data",
     icon: FileText,
-    path: "/dashboard/data",
+    path: "/data",
   },
   {
     title: "Submissions",
     icon: FileClock,
-    path: "/dashboard/submissions",
+    path: "/submissions",
   },
   {
     title: "Template Management",
     icon: Database,
-    path: "/dashboard/template-management",
+    path: "/template-management",
   },
   {
     title: "Export",
     icon: FileText,
-    path: "/dashboard/export",
+    path: "/export",
   },
 ];
 
 const contextConfig = {
-  "/dashboard/data": {
+  "/data": {
     title: "Data Entry",
     showSearch: true,
     showTemplates: true,
     searchPlaceholder: "Search templates...",
   },
-  "/dashboard/template-management": {
+  "/template-management": {
     title: "Template Management",
     showSearch: false,
     showTemplates: false,
@@ -128,18 +128,18 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     )?.[1] || contextConfig["/dashboard"];
 
 
-  useEffect(() => {
-    // Redirect based on selected menu item (determined by the path or some logic)
-    if (selectedBoard && selectedAcademicYear) {
-      const currentBasePath = pathname.startsWith("/dashboard/data")
-        ? "/dashboard/data"
-        : pathname.startsWith("/dashboard/template-management")
-        ? "/dashboard/template-management"
-        : "/dashboard";
+  // useEffect(() => {
+  //   // Redirect based on selected menu item (determined by the path or some logic)
+  //   if (selectedBoard && selectedAcademicYear) {
+  //     const currentBasePath = pathname.startsWith("/data")
+  //       ? "/data"
+  //       : pathname.startsWith("/template-management")
+  //       ? "/template-management"
+  //       : "/dashboard";
 
-      router.push(currentBasePath, undefined);
-    }
-  }, [selectedBoard, selectedAcademicYear]);
+  //     router.push(currentBasePath, undefined);
+  //   }
+  // }, [selectedBoard, selectedAcademicYear]);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -270,9 +270,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                           <Link
                             key={template.id}
                             href={
-                              pathname.startsWith("/dashboard/data")
-                                ? `/dashboard/data/${template.code}`
-                                : `/dashboard/template-management/${template.code}`
+                              pathname.startsWith("/data")
+                                ? `/data/${template.code}`
+                                : `/template-management/${template.code}`
                             }
                             className="block"
                           >

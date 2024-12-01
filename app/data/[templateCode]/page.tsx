@@ -13,6 +13,19 @@ import { TemplateSections } from "@/components/template-management/template-sect
 import { showToast } from "@/lib/toast";
 import { SubmissionStatus } from "@/components/submission-status";
 import { SubmissionProvider } from "@/context/submission-context";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export default function TemplateDataPage() {
   const params = useParams();
@@ -65,20 +78,20 @@ export default function TemplateDataPage() {
   }
 
   return (
-    <SubmissionProvider templateCode={template.code}>
-      <div className="container mx-auto py-6">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold">{template.name}</h1>
-            <p className="text-muted-foreground">
-              Template Code: {template.code}
-            </p>
-          </div>
-          <SubmissionStatus />
+      <SubmissionProvider templateCode={template.code}>
+        <div className="container mx-auto py-6">
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold">{template.name}</h1>
+              <p className="text-muted-foreground">
+                Template Code: {template.code}
+              </p>
+            </div>
+            <SubmissionStatus />
 
-          <TemplateSections template={template} />
+            <TemplateSections template={template} />
+          </div>
         </div>
-      </div>
-    </SubmissionProvider>
+      </SubmissionProvider>
   );
 }
