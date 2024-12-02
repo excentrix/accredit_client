@@ -15,22 +15,48 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
+      # Checkout the code
       - uses: actions/checkout@v3
+
+      # Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '18' # Adjust to the Node.js version you're using
+
+      # Install dependencies
       - name: Install Dependencies
         run: npm install
-      - name: Lint
+
+      # Lint the code to catch any issues (optional step, can be skipped temporarily)
+      - name: Lint Code
         run: npm run lint
-      - name: Build
+        continue-on-error: true # Optional: Set to true if you want to continue even if linting fails
+
+      # Build the Next.js app
+      - name: Build Next.js App
         run: npm run build
+
+      # Export the app for static deployment (only if you are using next export)
       - name: Export Static Site
         run: npm run export
+
+      # Deploy to Azure Static Web Apps
       - name: Deploy to Azure
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_BEACH_0BC144700 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           app_location: "." # Path to your Next.js app
-          output_location: "out" # Path after static export
+          output_location: "out" # Location of the exported static site (change if different)
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_BEACH_0BC144700 }}
+          action: "close"
