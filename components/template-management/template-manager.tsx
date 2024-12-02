@@ -20,11 +20,7 @@ import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
 
 export function TemplateManager() {
-
-  const {
-    selectedBoard,
-    selectedAcademicYear,
-  } = useSettings();
+  const { selectedBoard, selectedAcademicYear } = useSettings();
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +34,7 @@ export function TemplateManager() {
           board: selectedBoard,
           academic_year: selectedAcademicYear,
         },
-      })
+      });
       setTemplates(response.data);
     } catch (error) {
       showToast.error("Failed to fetch templates");
@@ -52,7 +48,7 @@ export function TemplateManager() {
   }, [selectedAcademicYear, selectedBoard]);
 
   const handleEdit = (template: Template) => {
-    router.push(`/dashboard/template-management/edit?code=${template.code}`);
+    router.push(`/template-management/edit?code=${template.code}`);
   };
 
   const handleDelete = async (template: Template) => {
@@ -85,9 +81,7 @@ export function TemplateManager() {
             <FileDown className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button
-            onClick={() => router.push("/dashboard/template-management/add")}
-          >
+          <Button onClick={() => router.push("/template-management/add")}>
             <Plus className="h-4 w-4 mr-2" />
             Add Template
           </Button>
@@ -138,9 +132,11 @@ export function TemplateManager() {
                         {/* List of Headers */}
                         {item.headers && item.headers.length > 0 && (
                           <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
-                            {item.headers.map((header: string, headerIndex: number) => (
-                              <li key={headerIndex}>{header}</li>
-                            ))}
+                            {item.headers.map(
+                              (header: string, headerIndex: number) => (
+                                <li key={headerIndex}>{header}</li>
+                              )
+                            )}
                           </ul>
                         )}
                       </div>
