@@ -63,28 +63,22 @@ const mainNavItems = [
   {
     title: "Data",
     icon: FileText,
-    path: "/data",
+    path: "/dashboard/data",
   },
   {
     title: "Submissions",
     icon: FileClock,
-    path: "/submissions",
+    path: "/dashboard/submissions",
   },
   {
     title: "Template Management",
     icon: Database,
-    path: "/template-management",
+    path: "/dashboard/template-management",
   },
   {
     title: "Export",
     icon: FileText,
-    path: "/export",
-  },
-  {
-    title: "User Management",
-    path: "/dashboard/user-management",
-    icon: Users, // Import Users from lucide-react
-    roles: ["admin"], // Only show for admin users
+    path: "/dashboard/export",
   },
   {
     title: "User Management",
@@ -95,13 +89,13 @@ const mainNavItems = [
 ];
 
 const contextConfig = {
-  "/data": {
+  "/dashboard/data": {
     title: "Data Entry",
     showSearch: true,
     showTemplates: true,
     searchPlaceholder: "Search templates...",
   },
-  "/template-management": {
+  "/dashboard/template-management": {
     title: "Template Management",
     showSearch: false,
     showTemplates: false,
@@ -279,9 +273,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                           <Link
                             key={template.id}
                             href={
-                              pathname.startsWith("/data")
-                                ? `/data/${template.code}`
-                                : `/template-management/${template.code}`
+                              pathname.startsWith("/dashboard/data")
+                                ? `/dashboard/data/${template.code}`
+                                : `/dashboard/template-management/${template.code}`
                             }
                             className="block"
                           >
