@@ -1,3 +1,5 @@
+// core.ts
+
 import api from "./api";
 
 export const academicYearServices = {

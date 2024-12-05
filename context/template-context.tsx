@@ -1,4 +1,4 @@
-// contexts/TemplateContext.tsx
+// context/TemplateContext.tsx
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { Template } from "@/types/template";
 import api from "@/services/api";

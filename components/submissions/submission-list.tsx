@@ -38,7 +38,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SubmissionStats } from "./submission-stats";
 import { useRouter } from "next/navigation";
 import { submissionStatsServices } from "@/services/core";
-import userManagementService from "@/services/user_mangement";
+import userManagementService from "@/services/user_management";
 
 const statusColors = {
   draft: "bg-gray-500",

@@ -1,0 +1,272 @@
+// services/user_management.ts
+import api from "./api";
+import { User, Role, Permission, Department } from "@/types/auth";
+
+const userManagementService = {
+  // Authentication Endpoints
+  login: async (email: string, password: string) => {
+    const response = await api.post("/user/token/", { email, password });
+    return response.data;
+  },
+
+  refreshAccessToken: async (refreshToken: string) => {
+    const response = await api.post("/user/token/refresh/", {
+      refresh: refreshToken,
+    });
+    return response.data;
+  },
+
+  logout: async () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    const response = await api.post("/user/logout/", {
+      refresh_token: refreshToken,
+    });
+    return response.data;
+  },
+
+  // User Management
+  fetchUsers: async (params: any = {}) => {
+    const response = await api.get("/user/users/", { params });
+    return response.data.results;
+  },
+
+  fetchCurrentUser: async () => {
+    const response = await api.get("/user/users/me/");
+    return response.data;
+  },
+
+  createUser: async (userData: {
+    email: string;
+    username: string;
+    password: string;
+    department_id?: number;
+    role_ids?: number[];
+    is_active?: boolean;
+  }) => {
+    const response = await api.post("/user/users/", userData);
+    return response.data;
+  },
+
+  updateUser: async (userId: number, userData: Partial<User>) => {
+    const response = await api.put(`/user/users/${userId}/`, userData);
+    return response.data;
+  },
+
+  deleteUser: async (userId: number) => {
+    await api.delete(`/user/users/${userId}/`);
+  },
+
+  // Role Management
+  fetchRoles: async () => {
+    const response = await api.get("/user/roles/");
+    return response.data.results;
+  },
+
+  fetchRole: async (roleId: number) => {
+    const response = await api.get(`/user/roles/${roleId}/`);
+    return response.data;
+  },
+
+  createRole: async (roleData: {
+    name: string;
+    description?: string;
+    permission_ids?: number[];
+  }) => {
+    const response = await api.post("/user/roles/", roleData);
+    return response.data;
+  },
+
+  updateRole: async (roleId: number, roleData: Partial<Role>) => {
+    const response = await api.put(`/user/roles/${roleId}/`, roleData);
+    return response.data;
+  },
+
+  deleteRole: async (roleId: number) => {
+    await api.delete(`/user/roles/${roleId}/`);
+  },
+
+  // Role Users Management
+  fetchRoleUsers: async (roleId: number) => {
+    const response = await api.get(`/user/roles/${roleId}/users/`);
+    return response.data.results;
+  },
+
+  assignRole: async (userId: number, roleId: number) => {
+    const response = await api.post(`/user/users/${userId}/roles/`, {
+      role_id: roleId,
+    });
+    return response.data;
+  },
+
+  revokeRole: async (userId: number, roleId: number) => {
+    await api.delete(`/user/users/${userId}/roles/${roleId}/`);
+  },
+
+  // Role Permissions Management
+  updateRolePermissions: async (roleId: number, permissionIds: number[]) => {
+    const response = await api.put(`/user/roles/${roleId}/permissions/`, {
+      permission_ids: permissionIds,
+    });
+    return response.data;
+  },
+
+  // Permission Management
+  fetchPermissions: async () => {
+    const response = await api.get("/user/permissions/");
+    return response.data.results || [];
+  },
+
+  fetchPermissionsByModule: async (module: string) => {
+    const response = await api.get(`/user/permissions/`, {
+      params: { module },
+    });
+    return response.data.results;
+  },
+
+  fetchPermissionsByResource: async (resource: string) => {
+    const response = await api.get(`/user/permissions/`, {
+      params: { resource },
+    });
+    return response.data.results;
+  },
+
+  // User Permissions Management
+  fetchUserPermissions: async (userId: number) => {
+    const response = await api.get(`/user/users/${userId}/permissions/`);
+    return response.data || [];
+  },
+
+  fetchUserDirectPermissions: async (userId: number) => {
+    const response = await api.get(`/user/users/${userId}/direct_permissions/`);
+    return response.data || [];
+  },
+
+  fetchUserRolePermissions: async (userId: number) => {
+    const response = await api.get(`/user/users/${userId}/role_permissions/`);
+    return response.data || [];
+  },
+
+  assignPermissionToUser: async (userId: number, permissionId: number) => {
+    const response = await api.post(
+      `/user/users/${userId}/assign_permission/`,
+      {
+        permission_id: permissionId,
+      }
+    );
+    return response.data;
+  },
+
+  revokePermissionFromUser: async (userId: number, permissionId: number) => {
+    const response = await api.delete(
+      `/user/users/${userId}/permissions/${permissionId}/`
+    );
+    return response.data;
+  },
+
+  // Department Management
+  fetchDepartments: async () => {
+    const response = await api.get("/user/departments/");
+    return response.data.results;
+  },
+
+  createDepartment: async (departmentData: {
+    name: string;
+    code: string;
+    description?: string;
+  }) => {
+    const response = await api.post("/user/departments/", departmentData);
+    return response.data;
+  },
+
+  updateDepartment: async (
+    departmentId: number,
+    departmentData: Partial<Department>
+  ) => {
+    const response = await api.put(
+      `/user/departments/${departmentId}/`,
+      departmentData
+    );
+    return response.data;
+  },
+
+  deleteDepartment: async (departmentId: number) => {
+    await api.delete(`/user/departments/${departmentId}/`);
+  },
+
+  // Department Users Management
+  fetchDepartmentUsers: async (departmentId: number) => {
+    const response = await api.get(`/user/departments/${departmentId}/users/`);
+    return response.data.results;
+  },
+
+  assignUserToDepartment: async (userId: number, departmentId: number) => {
+    const response = await api.put(`/user/users/${userId}/department/`, {
+      department_id: departmentId,
+    });
+    return response.data;
+  },
+
+  removeUserFromDepartment: async (userId: number) => {
+    await api.delete(`/user/users/${userId}/department/`);
+  },
+
+  // Password Management
+  changePassword: async (
+    userId: number,
+    passwords: {
+      current_password: string;
+      new_password: string;
+    }
+  ) => {
+    const response = await api.post(
+      `/user/users/${userId}/change-password/`,
+      passwords
+    );
+    return response.data;
+  },
+
+  resetPasswordRequest: async (email: string) => {
+    const response = await api.post("/user/reset-password-request/", { email });
+    return response.data;
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    const response = await api.post("/user/reset-password/", {
+      token,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
+
+  // Audit Log
+  fetchAuditLogs: async (
+    params: {
+      user_id?: number;
+      action?: string;
+      module?: string;
+      start_date?: string;
+      end_date?: string;
+      page?: number;
+      page_size?: number;
+    } = {}
+  ) => {
+    const response = await api.get("/user/audit-logs/", { params });
+    return response.data;
+  },
+
+  // User Session Management
+  fetchUserSessions: async (userId: number) => {
+    const response = await api.get(`/user/users/${userId}/sessions/`);
+    return response.data.results;
+  },
+
+  terminateSession: async (userId: number, sessionId: string) => {
+    await api.delete(`/user/users/${userId}/sessions/${sessionId}/`);
+  },
+
+  terminateAllSessions: async (userId: number) => {
+    await api.delete(`/user/users/${userId}/sessions/`);
+  },
+};
+
+export default userManagementService;

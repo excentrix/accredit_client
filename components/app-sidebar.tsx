@@ -12,6 +12,7 @@ import {
   Loader2,
   Plus,
   FileClock,
+  Users,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -78,6 +79,12 @@ const mainNavItems = [
     title: "Export",
     icon: FileText,
     path: "/dashboard/export",
+  },
+  {
+    title: "User Management",
+    path: "/dashboard/user-management",
+    icon: Users, // Import Users from lucide-react
+    roles: ["admin"], // Only show for admin users
   },
 ];
 
