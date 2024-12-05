@@ -16,7 +16,7 @@ import { SubmissionProvider } from "@/context/submission-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { useSettings } from "@/context/settings-context";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +28,10 @@ const queryClient = new QueryClient({
 });
 
 export default function TemplateDataPage() {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
   const params = useParams();
 
   const [template, setTemplate] = useState<Template | null>(null);
@@ -41,7 +45,12 @@ export default function TemplateDataPage() {
         setIsLoading(true);
         console.log("Fetching template:", params.templateCode); // Debug log
 
-        const response = await api.get(`/templates/${params.templateCode}`);
+        const response = await api.get(`/templates/${params.templateCode}`, {
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          }
+        });
         console.log("Template response:", response.data); // Debug log
 
         if (response.data) {

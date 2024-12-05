@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { Template } from "@/types/template";
 import api from "@/lib/api";
+import { useSettings } from "@/context/settings-context";
 
 interface TemplateContextType {
   activeSection: number;
@@ -23,6 +24,11 @@ export function TemplateProvider({
   children: React.ReactNode;
   template: Template;
 }) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
+
   const [activeSection, setActiveSection] = useState(0);
   const [sectionData, setSectionData] = useState<{ [key: number]: any[] }>({});
   const [isLoading, setIsLoading] = useState<{ [key: number]: boolean }>({});
@@ -35,7 +41,12 @@ export function TemplateProvider({
 
       try {
         const response = await api.get(
-          `/templates/${template.code}/sections/${sectionIndex}/data/`
+          `/templates/${template.code}/sections/${sectionIndex}/data/`, {
+            params: {
+              board: selectedBoard,
+              academic_year: selectedAcademicYear,
+            }
+          }
         );
 
         if (response.data.status === "success") {

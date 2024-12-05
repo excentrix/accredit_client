@@ -44,12 +44,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { debounce } from "lodash";
+import { useSettings } from "@/context/settings-context";
 
 interface DataTableProps {
   template: Template;
 }
 
 export function DataTable({ template }: DataTableProps) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
   const [data, setData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,7 +95,12 @@ export function DataTable({ template }: DataTableProps) {
 
   const refreshData = async () => {
     try {
-      const response = await api.get(`/templates/${template.code}/data/`);
+      const response = await api.get(`/templates/${template.code}/data/`, {
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+        },
+      });
       if (response.data.status === "success") {
         setData(response.data.data.rows);
         setFilteredData(response.data.data.rows);
@@ -135,6 +145,11 @@ export function DataTable({ template }: DataTableProps) {
         `/templates/${template.code}/data/row/?row_id=${data[rowIndex].id}`,
         {
           data: editedData,
+        }, {
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          }
         }
       );
 
@@ -165,7 +180,12 @@ export function DataTable({ template }: DataTableProps) {
   const handleDelete = async (rowIndex: number) => {
     try {
       const response = await api.delete(
-        `/templates/${template.code}/data/row/?row_id=${data[rowIndex].id}`
+        `/templates/${template.code}/data/row/?row_id=${data[rowIndex].id}`, {
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          }
+        }
       );
 
       if (response.data.status === "success") {

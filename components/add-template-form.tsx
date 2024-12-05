@@ -678,7 +678,6 @@ export function AddTemplateForm({
   const onSubmit = async (values: z.infer<typeof templateSchema>) => {
     try {
       setIsSubmitting(true);
-
       const sanitizedData = {
         ...values,
         board: selectedBoard, // This should be the board ID number now
@@ -705,10 +704,26 @@ export function AddTemplateForm({
       };
 
       if (initialData) {
-        await api.put(`/templates/${initialData.code}/`, sanitizedData);
+        console.log("Creating template with data: 111", sanitizedData);
+        await api.put(`/templates/${initialData.code}/`, sanitizedData, 
+          {
+            params: {
+              board: selectedBoard,
+              academic_year: selectedAcademicYear,
+            }
+          }
+        );
         showToast.success("Template updated successfully");
       } else {
-        await api.post("/templates/", sanitizedData);
+        console.log("Creating template with data:", sanitizedData);
+        await api.post("/templates/", sanitizedData, 
+          {
+            params: {
+              board: selectedBoard,
+              academic_year: selectedAcademicYear,
+            }
+          }
+        );
         showToast.success("Template created successfully");
       }
       onSuccess();

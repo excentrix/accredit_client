@@ -55,7 +55,12 @@ export function TemplateManager() {
     if (!confirm("Are you sure you want to delete this template?")) return;
 
     try {
-      await api.delete(`/templates/${template.code}/`);
+      await api.delete(`/templates/${template.code}/`, {
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+        },
+      });
       showToast.success("Template deleted successfully");
       fetchTemplates();
     } catch (error) {

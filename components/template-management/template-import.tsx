@@ -7,8 +7,14 @@ import { Upload } from "lucide-react";
 
 import api from "@/lib/api";
 import { showToast } from "@/lib/toast";
+import { useSettings } from "@/context/settings-context";
 
 export function TemplateImport({ onSuccess }: { onSuccess: () => void }) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
+  
   const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +44,10 @@ export function TemplateImport({ onSuccess }: { onSuccess: () => void }) {
       const response = await api.post("/templates/import-excel/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+        },
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
         },
       });
 

@@ -8,6 +8,7 @@ import React, {
 import { SubmissionState } from "@/types/submission";
 import { showToast } from "@/lib/toast";
 import api from "@/lib/api";
+import { useSettings } from "@/context/settings-context";
 
 interface SubmissionContextType {
   submissionState: SubmissionState | null;
@@ -38,6 +39,11 @@ export function SubmissionProvider({
   children: React.ReactNode;
   templateCode: string;
 }) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
+
   const [submissionState, setSubmissionState] =
     useState<SubmissionState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +57,12 @@ export function SubmissionProvider({
         if (showLoadingState) setIsLoading(true);
 
         const response = await api.get(
-          `/templates/${templateCode}/submission/`
+          `/templates/${templateCode}/submission/`, {
+            params: {
+              board: selectedBoard,
+              academic_year: selectedAcademicYear,
+            }
+          }
         );
         if (response.data.status === "success") {
           const newState = response.data.data;
@@ -150,7 +161,7 @@ export function SubmissionProvider({
     setIsSubmitting(true);
 
     try {
-      const response = await api.post(`/templates/${templateCode}/submit/`);
+      const response = await api.post(`/templates/${templateCode}/submit/?board=${selectedBoard}&academic_year=${selectedAcademicYear}`);
 
       if (response.data.status === "success") {
         showToast.dismiss(loadingToast);
@@ -178,7 +189,7 @@ export function SubmissionProvider({
     setIsSubmitting(true);
 
     try {
-      const response = await api.post(`/templates/${templateCode}/withdraw/`);
+      const response = await api.post(`/templates/${templateCode}/withdraw/?board=${selectedBoard}&academic_year=${selectedAcademicYear}`);
 
       if (response.data.status === "success") {
         showToast.dismiss(loadingToast);

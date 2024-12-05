@@ -128,18 +128,18 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     )?.[1] || contextConfig["/dashboard"];
 
 
-  // useEffect(() => {
-  //   // Redirect based on selected menu item (determined by the path or some logic)
-  //   if (selectedBoard && selectedAcademicYear) {
-  //     const currentBasePath = pathname.startsWith("/data")
-  //       ? "/data"
-  //       : pathname.startsWith("/template-management")
-  //       ? "/template-management"
-  //       : "/dashboard";
+  useEffect(() => {
+    // Redirect based on selected menu item (determined by the path or some logic)
+    if (selectedBoard && selectedAcademicYear) {
+      const currentBasePath = pathname.startsWith("/data")
+        ? "/data"
+        : pathname.startsWith("/template-management")
+        ? "/template-management"
+        : "/dashboard";
 
-  //     router.push(currentBasePath, undefined);
-  //   }
-  // }, [selectedBoard, selectedAcademicYear]);
+      router.push(currentBasePath, undefined);
+    }
+  }, [selectedBoard, selectedAcademicYear]);
 
   useEffect(() => {
     const fetchTemplates = async () => {

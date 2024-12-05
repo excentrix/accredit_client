@@ -30,6 +30,7 @@ import { Textarea } from "../ui/textarea";
 import { showToast } from "@/lib/toast";
 import { useSubmission } from "@/context/submission-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useSettings } from "@/context/settings-context";
 
 interface SectionDataEntryFormProps {
   template: Template;
@@ -95,6 +96,10 @@ export function SectionDataEntryForm({
   sectionIndex,
   onSuccess,
 }: SectionDataEntryFormProps) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { refreshSectionData } = useTemplate();
   const { submissionState, isLoading, refreshSubmissionState } =
@@ -195,7 +200,12 @@ export function SectionDataEntryForm({
 
       const response = await api.post(
         `/templates/${template.code}/sections/${sectionIndex}/data/`,
-        flattenedData
+        flattenedData,{
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          }
+        }
       );
 
       if (response.data.status === "success") {

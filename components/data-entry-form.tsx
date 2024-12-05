@@ -35,6 +35,7 @@ import { Template } from "@/types/template";
 import { Plus } from "lucide-react";
 import api from "@/lib/api";
 import { showToast } from "@/lib/toast";
+import { useSettings } from "@/context/settings-context";
 
 interface DataEntryFormProps {
   template: Template;
@@ -42,6 +43,10 @@ interface DataEntryFormProps {
 }
 
 export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -161,8 +166,13 @@ export function DataEntryForm({ template, onSuccess }: DataEntryFormProps) {
       });
 
       const response = await api.post(`/templates/${template.code}/data/`, {
-        sections: sectionData,
-      });
+        sections: sectionData
+      }, {
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+      }
+    });
 
       if (response.data.status === "success") {
         showToast.success("Data entry has been saved successfully.");

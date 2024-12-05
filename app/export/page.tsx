@@ -54,7 +54,7 @@ export default function ExportPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const { selectedBoard, currentBoard } = useSettings();
+  const { selectedBoard, currentBoard, selectedAcademicYear } = useSettings();
 
   // Fetch current academic year
   const { data: currentAcademicYear, isLoading: isLoadingAcademicYear } =
@@ -84,7 +84,12 @@ export default function ExportPage() {
       if (selectedBoard) params.append("board", selectedBoard.toString());
       if (selectedCriterion) params.append("criterion", selectedCriterion);
 
-      const response = await api.get(`/templates/?${params.toString()}`);
+      const response = await api.get(`/templates/?${params.toString()}`, {
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+        }
+      });
       return response.data;
     },
     enabled: !!selectedBoard, // Only fetch when board is selected
@@ -143,6 +148,10 @@ export default function ExportPage() {
 
       const response = await api.get(`/templates/export/?${queryParams}`, {
         responseType: "blob",
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+        },
         // headers: {
         //   Accept:
         //     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { AddTemplateForm } from "../add-template-form";
 import { showToast } from "@/lib/toast";
+import { useSettings } from "@/context/settings-context";
 
 interface TemplateFormClientProps {
   action: string;
@@ -16,6 +17,11 @@ interface TemplateFormClientProps {
 }
 
 export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
+
   const router = useRouter();
 
   const [template, setTemplate] = useState<Template | null>(null);
@@ -29,7 +35,12 @@ export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
 
       try {
         setIsLoading(true);
-        const response = await api.get(`/templates/${code}`);
+        const response = await api.get(`/templates/${code}`, {
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          },
+        });
         setTemplate(response.data);
       } catch (error) {
         showToast.error("Failed to fetch template details");

@@ -35,6 +35,7 @@ import { Template } from "@/types/template";
 import { showToast } from "@/lib/toast";
 import { useTemplate } from "@/context/template-context";
 import { useSubmission } from "@/context/submission-context";
+import { useSettings } from "@/context/settings-context";
 
 interface Column {
   name: string;
@@ -212,6 +213,11 @@ export function SectionDataTable({
   section,
   sectionIndex,
 }: SectionDataTableProps) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
+  
   // Context values
   const { sectionData, refreshSectionData, isLoading } = useTemplate();
   const { submissionState } = useSubmission();
@@ -324,7 +330,12 @@ export function SectionDataTable({
 
       const response = await api.put(
         `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`,
-        dataToSend
+        dataToSend, {
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          }
+        }
       );
 
       if (response.data.status === "success") {
@@ -350,7 +361,12 @@ export function SectionDataTable({
     try {
       const currentData = sectionData[sectionIndex] || [];
       const response = await api.delete(
-        `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`
+        `/templates/${template.code}/sections/${sectionIndex}/data/${currentData[rowIndex].id}/`, {
+          params: {
+            board: selectedBoard,
+            academic_year: selectedAcademicYear,
+          }
+        }
       );
 
       if (response.data.status === "success") {

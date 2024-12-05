@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { showToast } from "@/lib/toast";
 import api from "@/lib/api";
+import { useSettings } from "@/context/settings-context";
 
 interface SubmissionReviewProps {
   templateCode: Template["code"];
@@ -30,6 +31,10 @@ export function SubmissionReview({
   departmentId,
   onReviewComplete,
 }: SubmissionReviewProps) {
+  const {
+    selectedBoard,
+    selectedAcademicYear,
+  } = useSettings();
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +46,11 @@ export function SubmissionReview({
     try {
       const response = await api.post(`/templates/${templateCode}/approve/`, {
         department: departmentId,
+      }, {
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+        }
       });
 
       if (response.data.status === "success") {
@@ -71,6 +81,11 @@ export function SubmissionReview({
       const response = await api.post(`/templates/${templateCode}/reject/`, {
         department: departmentId,
         reason: rejectionReason,
+      }, {
+        params: {
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
+        }
       });
 
       if (response.data.status === "success") {
