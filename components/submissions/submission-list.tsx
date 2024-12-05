@@ -73,7 +73,7 @@ export function SubmissionList() {
   const router = useRouter();
 
   const handleReviewClick = (submissionId: string) => {
-    router.push(`/dashboard/submissions/${submissionId}`);
+    router.push(`/submissions/${submissionId}`);
   };
 
   // Fetch departments for filter
