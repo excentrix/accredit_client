@@ -1,17 +1,15 @@
-// app/dashboard/data-management/[templateCode]/page.tsx
+// app/data-management/[code]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Template } from "@/types/template";
-import api from "@/services/api";
 
 import { Loader2 } from "lucide-react";
-import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { TemplateSections } from "@/components/template-management/template-sections";
 import { showToast } from "@/lib/toast";
-import { SubmissionStatus } from "@/components/submission-status";
+import { SubmissionStatus } from "@/components/submissions/submission-status";
 import { SubmissionProvider } from "@/context/submission-context";
 import { templateServices } from "@/services/core";
 
@@ -23,14 +21,14 @@ export default function TemplateDataPage() {
 
   useEffect(() => {
     const fetchTemplate = async () => {
-      if (!params.templateCode) return;
+      if (!params.code) return;
 
       try {
         setIsLoading(true);
-        console.log("Fetching template:", params.templateCode); // Debug log
+        console.log("Fetching template:", params.code); // Debug log
 
         const response = await templateServices.fetchTemplate(
-          params.templateCode.toString()
+          params.code.toString()
         );
         console.log("Template response:", response); // Debug log
 
@@ -46,7 +44,7 @@ export default function TemplateDataPage() {
     };
 
     fetchTemplate();
-  }, [params.templateCode]);
+  }, [params.code]);
 
   if (isLoading) {
     return (

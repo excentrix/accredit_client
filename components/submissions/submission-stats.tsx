@@ -4,7 +4,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, ListChecks, Clock, CheckCircle, XCircle } from "lucide-react";
-import api from "@/services/api";
 import { submissionStatsServices } from "@/services/core";
 
 export function SubmissionStats() {

@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle, Loader2, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import api from "@/services/api";
 import { showToast } from "@/lib/toast";
 import { useSettings } from "@/context/settings-context";
 import { criteriaServices, templateServices } from "@/services/core";

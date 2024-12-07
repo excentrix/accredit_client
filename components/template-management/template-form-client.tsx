@@ -3,11 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Template } from "@/types/template";
-import api from "@/services/api";
+import { Template } from "@/types/template";;
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { AddTemplateForm } from "../add-template-form";
+import { AddTemplateForm } from "./add-template-form";
 import { showToast } from "@/lib/toast";
 import { templateServices } from "@/services/core";
 
@@ -34,7 +33,7 @@ export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
         setTemplate(response);
       } catch (error) {
         showToast.error("Failed to fetch template details");
-        router.push("/dashboard/template-management");
+        router.push("/template-management");
       } finally {
         setIsLoading(false);
       }
@@ -44,7 +43,7 @@ export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
   }, [isEdit, code]);
 
   const handleSuccess = () => {
-    router.push("/dashboard/template-management");
+    router.push("/template-management");
   };
 
   if (isEdit && isLoading) {
@@ -61,7 +60,7 @@ export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push("/dashboard/template-management")}
+          onClick={() => router.push("/template-management")}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Templates

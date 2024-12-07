@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit2, Check, X, Trash2, Search, Filter, Loader2 } from "lucide-react";
-import api from "@/services/api";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,

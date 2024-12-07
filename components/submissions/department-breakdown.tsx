@@ -34,58 +34,34 @@ import {
   Loader2,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import api from "@/services/api";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { useState } from "react";
+
 import { useRouter } from "next/navigation";
-import { academicYearServices, submissionStatsServices } from "@/services/core";
+import { submissionStatsServices } from "@/services/core";
+import { useSettings } from "@/context/settings-context";
 
-interface DepartmentBreakdownProps {
-  initialAcademicYear?: number; // Changed to number for ID
-}
-
-export function DepartmentBreakdown({
-  initialAcademicYear,
-}: DepartmentBreakdownProps) {
-  const [selectedYear, setSelectedYear] = useState<number | undefined>(
-    initialAcademicYear
-  );
+export function DepartmentBreakdown() {
+  const { selectedAcademicYear, isLoading: isLoadingYears } = useSettings();
 
   const router = useRouter();
 
   const handleReviewClick = (submissionId: string) => {
-    router.push(`/dashboard/submissions/${submissionId}`);
+    router.push(`/submissions/${submissionId}`);
   };
-
-  // Fetch academic years
-  const { data: academicYearsResponse, isLoading: isLoadingYears } = useQuery({
-    queryKey: ["academic-years"],
-    queryFn: async () => {
-      const response = await academicYearServices.fetchAcademicYears();
-      return response;
-    },
-  });
 
   // Fetch breakdown
   const {
-    data: breakdownResponse,
+    data: breakdown,
     isLoading: isLoadingBreakdown,
     error,
   } = useQuery({
-    queryKey: ["department-breakdown", selectedYear],
+    queryKey: ["department-breakdown", selectedAcademicYear],
     queryFn: async () => {
       const response = await submissionStatsServices.fetchDepartmentBreakdown(
-        selectedYear
+        selectedAcademicYear
       );
       return response.data;
     },
-    enabled: !!selectedYear,
+    enabled: !!selectedAcademicYear,
   });
 
   if (isLoadingYears || isLoadingBreakdown) {
@@ -104,28 +80,8 @@ export function DepartmentBreakdown({
   //     );
   //   }
 
-  const academicYears = academicYearsResponse?.data || [];
-  const breakdown = breakdownResponse;
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Select
-          value={selectedYear?.toString()}
-          onValueChange={(value) => setSelectedYear(Number(value))}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select Academic Year" />
-          </SelectTrigger>
-          <SelectContent>
-            {academicYears.map((year: any) => (
-              <SelectItem key={year.id} value={year.id.toString()}>
-                {year.name} {/* Changed from year to name */}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
       {/* Overall Progress */}
       <Card>
         <CardHeader>

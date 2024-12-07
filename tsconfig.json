@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "config/guards/route-guard.tsx", "components/user-management"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/guards/route-guard.tsx", "components/user-management"],
   "exclude": ["node_modules"]
 }

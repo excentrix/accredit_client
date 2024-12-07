@@ -1,4 +1,4 @@
-// app/dashboard/user-management/roles/page.tsx
+// app/user-management/roles/page.tsx
 "use client";
 
 import { useState } from "react";

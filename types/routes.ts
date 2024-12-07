@@ -1,7 +1,7 @@
-import { UserRole } from "./auth";
+import { Role } from "./auth";
 
 export type RoutePermission = {
-  roles: UserRole[];
+  roles: Role[];
   redirect?: string;
 };
 
@@ -11,4 +11,3 @@ export type AppRoute = {
   title: string;
   description?: string;
 };
-    

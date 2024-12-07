@@ -20,19 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2,
   Search,
-  ListChecks,
-  Clock,
-  CheckCircle,
-  XCircle,
   Filter,
 } from "lucide-react";
 import { formatDistance, format } from "date-fns";
-import { showToast } from "@/lib/toast";
-import api from "@/services/api";
 import { SubmissionReview } from "./submission-review";
 import { useQuery } from "@tanstack/react-query";
 import { SubmissionStats } from "./submission-stats";
@@ -73,7 +66,7 @@ export function SubmissionList() {
   const router = useRouter();
 
   const handleReviewClick = (submissionId: string) => {
-    router.push(`/dashboard/submissions/${submissionId}`);
+    router.push(`/submissions/${submissionId}`);
   };
 
   // Fetch departments for filter

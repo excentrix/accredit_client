@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { SubmissionState } from "@/types/submission";
 import { showToast } from "@/lib/toast";
-import api from "@/services/api";
 import { templateServices, templateSubmissionServices } from "@/services/core";
 
 interface SubmissionContextType {

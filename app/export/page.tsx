@@ -38,7 +38,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import api from "@/services/api";
 import { useSettings } from "@/context/settings-context";
 import {
   academicYearServices,
@@ -58,7 +57,6 @@ export default function ExportPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
   const { selectedBoard, currentBoard } = useSettings();
 
   // Fetch current academic year
@@ -370,9 +368,12 @@ export default function ExportPage() {
                         <SelectValue placeholder="Filter by criterion" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Criteria</SelectItem>
+                        <SelectItem value="all">All Criteria</SelectItem>
                         {criteria?.map((criterion: any) => (
-                          <SelectItem key={criterion.id} value={criterion.id}>
+                          <SelectItem
+                            key={criterion.id}
+                            value={criterion.id.toString()}
+                          >
                             Criterion {criterion.number}
                           </SelectItem>
                         ))}
@@ -391,33 +392,54 @@ export default function ExportPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTemplates?.map((template: Template) => (
-                          <TableRow key={template.id}>
-                            <TableCell className="font-medium">
-                              {template.code}
-                            </TableCell>
-                            <TableCell>{template.name}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">
-                                Criterion {template.code.split(".")[0]}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  handleExport("template", {
-                                    template_code: template.code,
-                                  })
-                                }
-                                disabled={isExporting}
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
+                        {isLoadingTemplates ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center">
+                              <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                             </TableCell>
                           </TableRow>
-                        ))}
+                        ) : filteredTemplates?.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={4}
+                              className="text-center text-muted-foreground"
+                            >
+                              No templates found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredTemplates?.map((template: Template) => (
+                            <TableRow key={template.id}>
+                              <TableCell className="font-medium">
+                                {template.code}
+                              </TableCell>
+                              <TableCell>{template.name}</TableCell>
+                              <TableCell>
+                                <Badge variant="secondary">
+                                  Criterion {template.code.split(".")[0]}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleExport("template", {
+                                      template_code: template.code,
+                                    })
+                                  }
+                                  disabled={isExporting}
+                                >
+                                  {isExporting ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Download className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
                       </TableBody>
                     </Table>
                   </ScrollArea>

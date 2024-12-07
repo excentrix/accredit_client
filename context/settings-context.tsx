@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/use-auth-context";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { AcademicYear } from "@/types/academic-year";
+import { AcademicYear } from "@/types/board";
 import { Board } from "@/types/board";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";

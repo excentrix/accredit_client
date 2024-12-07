@@ -1,23 +1,23 @@
-// app/dashboard/user-management/layout.tsx
+// app/user-management/layout.tsx
 "use client";
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { usePathname, useRouter } from "next/navigation";
 
 const managementTabs = [
-  { id: "users", label: "Users", path: "/dashboard/user-management" },
+  { id: "users", label: "Users", path: "/user-management" },
   {
     id: "roles",
     label: "Roles & Permissions",
-    path: "/dashboard/user-management/roles",
+    path: "/user-management/roles",
   },
   {
     id: "departments",
     label: "Departments",
-    path: "/dashboard/user-management/departments",
+    path: "/user-management/departments",
   },
-  { id: "audit", label: "Audit Log", path: "/dashboard/user-management/audit" },
+  { id: "audit", label: "Audit Log", path: "/user-management/audit" },
 ];
 
 export default function UserManagementLayout({

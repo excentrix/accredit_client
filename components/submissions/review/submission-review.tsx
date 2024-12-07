@@ -5,7 +5,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -24,7 +23,6 @@ import {
   AlertCircle,
   Download,
   Eye,
-  MessageSquare,
   History,
   FileText,
   Calendar,
@@ -45,8 +43,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import api from "@/services/api";
 
 import { SubmissionTimeline } from "./submission-timeline";
 import { DiffViewer } from "./diff-viewer";
@@ -237,11 +233,11 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
                 <TabsList className="w-full flex-wrap h-auto gap-2 p-2">
                   {[
                     ...new Set(
-                      submission.data_rows.map((row) => row.section_index)
+                      submission.data_rows.map((row: any) => row.section_index)
                     ),
                   ].map((sectionIndex) => {
                     const sectionData = submission.data_rows.filter(
-                      (row) => row.section_index === sectionIndex
+                      (row: any) => row.section_index === sectionIndex
                     );
 
                     return (
@@ -261,11 +257,11 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
 
                 {[
                   ...new Set(
-                    submission?.data_rows?.map((row) => row.section_index)
+                    submission?.data_rows?.map((row: any) => row.section_index)
                   ),
                 ].map((sectionIndex) => {
                   const sectionData = submission.data_rows.filter(
-                    (row) => row.section_index === sectionIndex
+                    (row: any) => row.section_index === sectionIndex
                   );
 
                   return (
@@ -325,7 +321,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {sectionData.map((row) => (
+                                {sectionData.map((row: any) => (
                                   <TableRow key={row.row_number}>
                                     {Object.values(row.data).map(
                                       (value, index) => (

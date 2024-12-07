@@ -13,16 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
-import api from "@/services/api";
 import { showToast } from "@/lib/toast";
 import { criteriaServices } from "@/services/core";
 
 interface Criterion {
   id: number;
-  code: string;
+  number: number;
   name: string;
   description: string;
-  weightage: number;
 }
 
 export function CriteriaManager() {
@@ -36,8 +34,8 @@ export function CriteriaManager() {
   const fetchCriteria = async () => {
     try {
       setIsLoading(true);
-      // const response = await criteriaServices.fetchCriteriaList();
-      // setCriteria(response.data);
+      const response = await criteriaServices.fetchCriteriaList();
+      setCriteria(response);
     } catch (error) {
       showToast.error("Failed to fetch criteria");
     } finally {
@@ -48,6 +46,8 @@ export function CriteriaManager() {
   useEffect(() => {
     fetchCriteria();
   }, []);
+
+  console.log(criteria);
 
   return (
     <div className="space-y-4">
@@ -71,7 +71,6 @@ export function CriteriaManager() {
               <TableHead>Code</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Weightage</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -82,7 +81,7 @@ export function CriteriaManager() {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : criteria.length === 0 ? (
+            ) : criteria?.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={5}
@@ -92,14 +91,14 @@ export function CriteriaManager() {
                 </TableCell>
               </TableRow>
             ) : (
-              criteria.map((criterion) => (
+              criteria?.map((criterion) => (
                 <TableRow key={criterion.id}>
                   <TableCell className="font-medium">
-                    {criterion.code}
+                    {criterion.number}
                   </TableCell>
                   <TableCell>{criterion.name}</TableCell>
                   <TableCell>{criterion.description}</TableCell>
-                  <TableCell>{criterion.weightage}</TableCell>
+
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button

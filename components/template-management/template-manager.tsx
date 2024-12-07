@@ -15,7 +15,6 @@ import { Plus, Edit, Trash2, FileDown, FileUp } from "lucide-react";
 
 import { Template } from "@/types/template";
 import { useSettings } from "@/context/settings-context";
-import api from "@/services/api";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
 import { templateServices } from "@/services/core";
@@ -47,7 +46,7 @@ export function TemplateManager() {
   }, [selectedAcademicYear, selectedBoard]);
 
   const handleEdit = (template: Template) => {
-    router.push(`/dashboard/template-management/edit?code=${template.code}`);
+    router.push(`/template-management/edit?code=${template.code}`);
   };
 
   const handleDelete = async (template: Template) => {
@@ -80,9 +79,7 @@ export function TemplateManager() {
             <FileDown className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button
-            onClick={() => router.push("/dashboard/template-management/add")}
-          >
+          <Button onClick={() => router.push("/template-management/add")}>
             <Plus className="h-4 w-4 mr-2" />
             Add Template
           </Button>

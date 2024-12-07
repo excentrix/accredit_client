@@ -10,7 +10,6 @@ import {
   Calendar,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +30,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useSettings } from "@/context/settings-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { use } from "react";
 import { useAuth } from "@/context/use-auth-context";
 import { showToast } from "@/lib/toast";
 import { useRouter } from "next/navigation";

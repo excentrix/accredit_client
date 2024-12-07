@@ -15,7 +15,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { showToast } from "@/lib/toast";
-import api from "@/services/api";
 import { templateSubmissionServices } from "@/services/core";
 
 interface SubmissionReviewProps {

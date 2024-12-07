@@ -149,11 +149,7 @@ export const submissionStatsServices = {
     api.get("/api/submissions/stats/").then((res) => res.data),
 
   fetchDepartmentBreakdown: (year: any) =>
-    api
-      .get("/api/submissions/department-breakdown/", {
-        params: { academic_year: year },
-      })
-      .then((res) => res.data),
+    api.get("/api/submissions/department-breakdown/").then((res) => res.data),
   fetchCurrentAcademicYearSubmissions: (filters: {
     searchQuery?: string;
     statusFilter?: string;
@@ -192,5 +188,63 @@ export const autocompleteServices = {
   fetchAutocompleteResults: (query: string) =>
     api
       .get("/api/autocomplete/", { params: { query } })
+      .then((res) => res.data),
+};
+
+// Add to services/core.ts
+
+export const dashboardServices = {
+  // Fetch overall dashboard stats for admin and IQAC director
+  fetchOverallStats: (params?: { board_id?: number; academic_year?: number }) =>
+    api.get("/api/dashboard/stats/", { params }).then((res) => res.data),
+
+  // Fetch faculty-specific dashboard stats
+  fetchFacultyStats: (params?: {
+    department_id?: number;
+    academic_year?: number;
+    board_id?: number;
+  }) =>
+    api
+      .get("/api/dashboard/faculty-stats/", { params })
+      .then((res) => res.data),
+
+  // Fetch activity timeline data
+  fetchActivityTimeline: (params?: {
+    board_id?: number;
+    academic_year?: number;
+    department_id?: number;
+    days?: number;
+  }) =>
+    api
+      .get("/api/dashboard/activity-timeline/", { params })
+      .then((res) => res.data),
+
+  // Fetch criteria-wise completion stats
+  fetchCriteriaCompletion: (params?: {
+    board_id?: number;
+    academic_year?: number;
+  }) =>
+    api
+      .get("/api/dashboard/criteria-completion/", { params })
+      .then((res) => res.data),
+
+  // Fetch recent activity
+  fetchRecentActivity: (params?: {
+    board_id?: number;
+    academic_year?: number;
+    department_id?: number;
+    limit?: number;
+  }) =>
+    api
+      .get("/api/dashboard/recent-activity/", { params })
+      .then((res) => res.data),
+
+  // Fetch department summary
+  fetchDepartmentSummary: (params?: {
+    board_id?: number;
+    academic_year?: number;
+  }) =>
+    api
+      .get("/api/dashboard/department-summary/", { params })
       .then((res) => res.data),
 };

@@ -1,5 +1,4 @@
 // components/submissions/review/submission-timeline.tsx
-import { Circle } from "lucide-react";
 
 interface TimelineEvent {
   id: string;

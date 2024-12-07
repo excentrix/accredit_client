@@ -4,7 +4,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { DepartmentBreakdown } from "@/components/submissions/department-breakdown";
 import { SubmissionList } from "@/components/submissions/submission-list";
-import api from "@/services/api";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ListIcon } from "lucide-react";
@@ -42,7 +41,7 @@ export default function IQACSubmissionsPage() {
         </div>
 
         <SubmissionList />
-        <DepartmentBreakdown initialAcademicYear={currentYear?.id} />
+        <DepartmentBreakdown />
       </div>
     </div>
   );

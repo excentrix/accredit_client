@@ -269,4 +269,33 @@ const userManagementService = {
   },
 };
 
+export const auditServices = {
+  fetchAuditLogs: (params?: { type?: string; days?: number }) =>
+    api.get("/user/audit-logs/", { params }).then((res) => res.data),
+
+  exportAuditLogs: (params?: { type?: string; days?: number }) =>
+    api
+      .get("/user/audit-logs/export/", {
+        params,
+        responseType: "blob",
+      })
+      .then((res) => {
+        // Create and trigger download
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        const fileName = `audit_logs_${
+          new Date().toISOString().split("T")[0]
+        }.csv`;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }),
+
+  fetchAuditSummary: (params?: { days?: number }) =>
+    api.get("/user/audit-logs/summary/", { params }).then((res) => res.data),
+};
+
 export default userManagementService;
