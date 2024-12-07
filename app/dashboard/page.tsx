@@ -13,8 +13,6 @@ export default function DashboardLayout({
   const { isAuthenticated, isLoading, checkAuth } = useAuth();
   const router = useRouter();
 
-  console.log("dash");
-
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) {

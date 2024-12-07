@@ -31,6 +31,7 @@ import { showToast } from "@/lib/toast";
 import { useSubmission } from "@/context/submission-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { sectionDataServices } from "@/services/core";
+import { useSettings } from "@/context/settings-context";
 
 interface SectionDataEntryFormProps {
   template: Template;
@@ -100,6 +101,8 @@ export function SectionDataEntryForm({
   const { refreshSectionData } = useTemplate();
   const { submissionState, isLoading, refreshSubmissionState } =
     useSubmission();
+
+  const { selectedAcademicYear } = useSettings();
 
   const formSchema = useMemo(() => {
     const schemaShape: { [key: string]: z.ZodType<any, any> } = {};
@@ -193,11 +196,15 @@ export function SectionDataEntryForm({
         console.log("Original values:", values);
         console.log("Flattened data for submission:", flattenedData);
       }
-
+      let params = {
+        board: template.board?.id,
+        academic_year: selectedAcademicYear,
+      };
       const response = await sectionDataServices.createSectionData(
         template.code,
         sectionIndex,
-        flattenedData
+        flattenedData,
+        params
       );
       console.log("sectionDataServices response", response);
       if (response.status === "success") {

@@ -28,13 +28,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -156,10 +150,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         setIsLoading(true);
         setError(null);
 
-        console.log("Fetching templates with params:", {
-          board: selectedBoard,
-          academic_year: selectedAcademicYear,
-        });
+        // console.log("Fetching templates with params:", {
+        //   board: selectedBoard,
+        //   academic_year: selectedAcademicYear,
+        // });
 
         // Make sure we're using the correct query parameters
         const response = await templateServices.fetchTemplates({
@@ -358,13 +352,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="p-4">
-          <NavUser
-            user={{
-              name: "Sid karthik",
-              email: "sid@test.com",
-              avatar: "admin",
-            }}
-          />
+          {user && <NavUser user={user} />}
         </SidebarFooter>
       </Sidebar>
 

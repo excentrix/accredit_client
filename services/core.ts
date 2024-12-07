@@ -29,7 +29,7 @@ export const boardServices = {
 };
 export const templateServices = {
   fetchTemplates: (params: any) =>
-    api.get(`/api/templates/`, params).then((res) => res.data),
+    api.get(`/api/templates/`, { params }).then((res) => res.data),
 
   fetchTemplate: (code: string) =>
     api.get(`/api/templates/${code}/`).then((res) => res.data),
@@ -110,13 +110,20 @@ export const templateDataServices = {
 };
 
 export const sectionDataServices = {
-  fetchSectionData: (code: string, sectionIndex: number) =>
+  fetchSectionData: (code: string, sectionIndex: number, params: any) =>
     api
-      .get(`/api/templates/${code}/sections/${sectionIndex}/data/`)
+      .get(`/api/templates/${code}/sections/${sectionIndex}/data/`, { params })
       .then((res) => res.data),
-  createSectionData: (code: string, sectionIndex: number, data: any) =>
+  createSectionData: (
+    code: string,
+    sectionIndex: number,
+    data: any,
+    params: any
+  ) =>
     api
-      .post(`/api/templates/${code}/sections/${sectionIndex}/data/`, data)
+      .post(`/api/templates/${code}/sections/${sectionIndex}/data/`, data, {
+        params,
+      })
       .then((res) => res.data),
 
   updateSectionDataRow: (
@@ -160,8 +167,11 @@ export const submissionStatsServices = {
     if (filters.departmentFilter && filters.departmentFilter !== "all")
       params.append("department", filters.departmentFilter);
 
+    // return api
+    //   .get(`/api/submissions/current_academic_year/?${params.toString()}`)
+    //   .then((res) => res);
     return api
-      .get(`/api/submissions/current_academic_year/?${params.toString()}`)
+      .get(`/api/submissions/current_academic_year/`)
       .then((res) => res.data);
   },
   fetchSubmissionById: (submissionId: string) =>

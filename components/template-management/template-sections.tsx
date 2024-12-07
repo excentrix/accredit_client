@@ -29,7 +29,6 @@ function TemplateSectionsContent({ template }: TemplateSectionsProps) {
     refreshSectionData(newIndex);
   };
 
-  console.log(error)
 
   return (
     <Tabs

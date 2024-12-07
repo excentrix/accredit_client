@@ -97,12 +97,15 @@ export function SubmissionList() {
     refetch,
   } = useQuery({
     queryKey: ["submissions", searchQuery, statusFilter, departmentFilter],
-    queryFn: () =>
-      submissionStatsServices.fetchCurrentAcademicYearSubmissions({
-        searchQuery,
-        statusFilter,
-        departmentFilter,
-      }),
+    queryFn: async () => {
+      const response =
+        await submissionStatsServices.fetchCurrentAcademicYearSubmissions({
+          searchQuery,
+          statusFilter,
+          departmentFilter,
+        });
+      return response;
+    },
   });
 
   return (
@@ -170,7 +173,7 @@ export function SubmissionList() {
                   <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                 </TableCell>
               </TableRow>
-            ) : submissions.length === 0 ? (
+            ) : submissions?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
@@ -182,7 +185,7 @@ export function SubmissionList() {
                 </TableCell>
               </TableRow>
             ) : (
-              submissions.map((submission: Submission) => (
+              submissions?.map((submission: Submission) => (
                 <TableRow
                   key={submission.id}
                   className="cursor-pointer hover:bg-muted/50"

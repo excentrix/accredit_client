@@ -26,7 +26,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined
 );
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   SELECTED_BOARD: "selected_board",
   SELECTED_ACADEMIC_YEAR: "selected_academic_year",
 } as const;
@@ -50,7 +50,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth(); 
+  const { isAuthenticated } = useAuth();
 
   const router = useRouter();
 
@@ -58,7 +58,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedBoard = localStorage.getItem(STORAGE_KEYS.SELECTED_BOARD);
-      const storedYear = localStorage.getItem(STORAGE_KEYS.SELECTED_ACADEMIC_YEAR);
+      const storedYear = localStorage.getItem(
+        STORAGE_KEYS.SELECTED_ACADEMIC_YEAR
+      );
 
       if (storedBoard) {
         setSelectedBoard(parseInt(storedBoard, 10));
@@ -83,8 +85,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
         setBoards(boardsResponse.data);
         setAcademicYears(yearsResponse.data.data);
-
-        
       } catch (error) {
         console.error("Failed to fetch initial settings data:", error);
         setError("Failed to load settings. Please try again later.");
@@ -98,7 +98,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (academicYears.length > 0) {
-      if (selectedAcademicYear && !academicYears.some((y: AcademicYear) => y.id === selectedAcademicYear)) {
+      if (
+        selectedAcademicYear &&
+        !academicYears.some((y: AcademicYear) => y.id === selectedAcademicYear)
+      ) {
         // If invalid, fallback to the first available academic year
         const defaultYear = academicYears[0];
         if (defaultYear) {
@@ -106,25 +109,29 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
       } else if (!selectedAcademicYear) {
         // Set current year if no academic year is selected
-        const currentYear = academicYears.find((year: AcademicYear) => year.is_current);
+        const currentYear = academicYears.find(
+          (year: AcademicYear) => year.is_current
+        );
         if (currentYear) {
           handleSetAcademicYear(currentYear.id);
         }
       }
     }
-  }, [academicYears, selectedAcademicYear]); 
+  }, [academicYears, selectedAcademicYear]);
 
   useEffect(() => {
     if (boards.length > 0) {
       // Ensure that selected board is valid
-      if (selectedBoard && !boards.some((board: Board) => board.id === selectedBoard)) {
+      if (
+        selectedBoard &&
+        !boards.some((board: Board) => board.id === selectedBoard)
+      ) {
         // If invalid, fallback to the first available board
-        
+
         const defaultBoard = boards[0];
         if (defaultBoard) {
           handleSetBoard(defaultBoard.id);
         }
-
       } else if (!selectedBoard) {
         // If no board selected, set the first available one
         const defaultBoard = boards[0];
@@ -135,13 +142,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [boards, selectedBoard]);
 
-
-
   const handleSetBoard = (boardId: number) => {
     if (boards.find((b) => b.id === boardId)) {
       setSelectedBoard(boardId);
-      
-      if (typeof window !== "undefined"){
+
+      if (typeof window !== "undefined") {
         localStorage.setItem(STORAGE_KEYS.SELECTED_BOARD, boardId.toString());
       }
     } else {
@@ -152,7 +157,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const handleSetAcademicYear = (yearId: number) => {
     if (academicYears.find((y) => y.id === yearId)) {
       setSelectedAcademicYear(yearId);
-        if (typeof window !== "undefined") {
+      if (typeof window !== "undefined") {
         localStorage.setItem(
           STORAGE_KEYS.SELECTED_ACADEMIC_YEAR,
           yearId.toString()
@@ -164,10 +169,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Get current board and academic year objects
-  const currentBoard = boards.find((b) => b.id === selectedBoard) || boards[0]
-  const currentAcademicYear = academicYears.find(
-    (y) => y.id === selectedAcademicYear
-  ) || academicYears[0]
+  const currentBoard = boards.find((b) => b.id === selectedBoard) || boards[0];
+  const currentAcademicYear =
+    academicYears.find((y) => y.id === selectedAcademicYear) ||
+    academicYears[0];
 
   const value = React.useMemo(
     () => ({

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { Template } from "@/types/template";
 import api from "@/services/api";
 import { sectionDataServices } from "@/services/core";
+import { useSettings } from "./settings-context";
 
 interface TemplateContextType {
   activeSection: number;
@@ -29,15 +30,22 @@ export function TemplateProvider({
   const [isLoading, setIsLoading] = useState<{ [key: number]: boolean }>({});
   const [error, setError] = useState<{ [key: number]: string | null }>({});
 
+  const { selectedAcademicYear } = useSettings();
+
   const refreshSectionData = useCallback(
     async (sectionIndex: number) => {
       setIsLoading((prev) => ({ ...prev, [sectionIndex]: true }));
       setError((prev) => ({ ...prev, [sectionIndex]: null }));
 
       try {
+        let params = {
+          board: template.board?.id,
+          academic_year: selectedAcademicYear,
+        };
         const response = await sectionDataServices.fetchSectionData(
           template.code,
-          sectionIndex
+          sectionIndex,
+          params
         );
 
         if (response.status === "success") {

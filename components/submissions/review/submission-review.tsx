@@ -417,7 +417,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
                         <>
                           <p className="text-sm">
                             <span className="font-medium">Verified By:</span>{" "}
-                            {submission.verified_by}
+                            {submission.verified_by_name}
                           </p>
                           <p className="text-sm">
                             <span className="font-medium">Verified On:</span>{" "}
@@ -543,7 +543,15 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => handleReject(submissionId, rejectionReason, refetch, setIsRejectDialogOpen, setRejectionReason)}
+              onClick={() =>
+                handleReject(
+                  submissionId,
+                  rejectionReason,
+                  refetch,
+                  setIsRejectDialogOpen,
+                  setRejectionReason
+                )
+              }
               disabled={!rejectionReason}
             >
               Reject Submission

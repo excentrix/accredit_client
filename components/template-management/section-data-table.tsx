@@ -378,15 +378,15 @@ export function SectionDataTable({
     rowIndex: number,
     colIndex: number
   ) => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Cell debug:", {
-        column: column.name,
-        path: column.path,
-        flattenedKey: column.path.join("_"),
-        rowData: row.data,
-        value: getNestedValue(row.data, column.path),
-      });
-    }
+    // if (process.env.NODE_ENV === "development") {
+    //   console.log("Cell debug:", {
+    //     column: column.name,
+    //     path: column.path,
+    //     flattenedKey: column.path.join("_"),
+    //     rowData: row.data,
+    //     value: getNestedValue(row.data, column.path),
+    //   });
+    // }
 
     if (editingRow === rowIndex) {
       const currentValue = getNestedValue(editedData, column.path);

@@ -54,7 +54,7 @@ export function SubmissionProvider({
         if (showLoadingState) setIsLoading(true);
 
         const response = await templateServices.fetchSubmissions(templateCode);
-        console.log('subs', response);
+        console.log("subs", response);
 
         if (response.status === "success") {
           const newState = response.data;
@@ -185,11 +185,11 @@ export function SubmissionProvider({
       const response = await templateSubmissionServices.withdrawSubmission(
         templateCode
       );
-
-      if (response.data.status === "success") {
+      console.log("response", response);
+      if (response.status === "success") {
         showToast.dismiss(loadingToast);
         showToast.success("Submission withdrawn successfully");
-        setSubmissionState(response.data.data);
+        setSubmissionState(response.data);
       }
     } catch (error: any) {
       showToast.dismiss(loadingToast);
