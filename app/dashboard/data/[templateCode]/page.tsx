@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Template } from "@/types/template";
-import api from "@/lib/api";
+import api from "@/services/api";
 
 import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/data-table";
@@ -13,19 +13,7 @@ import { TemplateSections } from "@/components/template-management/template-sect
 import { showToast } from "@/lib/toast";
 import { SubmissionStatus } from "@/components/submission-status";
 import { SubmissionProvider } from "@/context/submission-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { templateServices } from "@/services/core";
 
 export default function TemplateDataPage() {
   const params = useParams();
@@ -41,11 +29,13 @@ export default function TemplateDataPage() {
         setIsLoading(true);
         console.log("Fetching template:", params.templateCode); // Debug log
 
-        const response = await api.get(`/templates/${params.templateCode}`);
-        console.log("Template response:", response.data); // Debug log
+        const response = await templateServices.fetchTemplate(
+          params.templateCode.toString()
+        );
+        console.log("Template response:", response); // Debug log
 
-        if (response.data) {
-          setTemplate(response.data);
+        if (response) {
+          setTemplate(response);
         }
       } catch (error) {
         console.error("Failed to fetch template:", error);
@@ -78,20 +68,20 @@ export default function TemplateDataPage() {
   }
 
   return (
-      <SubmissionProvider templateCode={template.code}>
-        <div className="container mx-auto py-6">
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold">{template.name}</h1>
-              <p className="text-muted-foreground">
-                Template Code: {template.code}
-              </p>
-            </div>
-            <SubmissionStatus />
-
-            <TemplateSections template={template} />
+    <SubmissionProvider templateCode={template.code}>
+      <div className="container mx-auto py-6">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold">{template.name}</h1>
+            <p className="text-muted-foreground">
+              Template Code: {template.code}
+            </p>
           </div>
+          <SubmissionStatus />
+
+          <TemplateSections template={template} />
         </div>
-      </SubmissionProvider>
+      </div>
+    </SubmissionProvider>
   );
 }

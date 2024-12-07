@@ -47,7 +47,7 @@ export function TemplateManager() {
   }, [selectedAcademicYear, selectedBoard]);
 
   const handleEdit = (template: Template) => {
-    router.push(`/template-management/edit?code=${template.code}`);
+    router.push(`/dashboard/template-management/edit?code=${template.code}`);
   };
 
   const handleDelete = async (template: Template) => {
@@ -80,7 +80,9 @@ export function TemplateManager() {
             <FileDown className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button onClick={() => router.push("/template-management/add")}>
+          <Button
+            onClick={() => router.push("/dashboard/template-management/add")}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Template
           </Button>
@@ -119,33 +121,38 @@ export function TemplateManager() {
               templates.map((template) => (
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">{template.code}</TableCell>
-                  <TableCell className="max-w-md">{template.name}</TableCell>
+                  <TableCell>{template.name}</TableCell>
                   <TableCell>
                     {template.metadata.map((item: any, index: number) => (
-                      <div key={index} className="mb-2">
-                        {/* Section Title */}
-                        <div className="font-semibold text-primary mb-2">
+                      <div key={index} className="mb-4">
+                        {/* Display Section Info */}
+                        <div className="font-semibold mb-2 text-primary">
                           Section {index + 1}
                         </div>
 
-                        {/* List of Headers */}
+                        {/* Display Headers */}
                         {item.headers && item.headers.length > 0 && (
-                          <ul className="list-disc pl-5 space-y-1 text-sm text-gray-800">
-                            {item.headers.map(
-                              (header: string, headerIndex: number) => (
-                                <li key={headerIndex}>{header}</li>
-                              )
-                            )}
-                          </ul>
+                          <div className="text-sm text-gray-600 mb-2">
+                            <strong>Headers:</strong>
+                            <ul className="list-disc pl-5">
+                              {item.headers.map(
+                                (header: string, headerIndex: number) => (
+                                  <li
+                                    key={headerIndex}
+                                    className="truncate text-sm text-gray-800"
+                                  >
+                                    {header}
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          </div>
                         )}
-                      </div>
-                    ))}
-                  </TableCell>
-                  <TableCell>
-                    {template.metadata.map((item: any, index: number) => (
-                      <span key={index}>
+
+                        {/* Display Columns */}
                         {item.columns && item.columns.length > 0 && (
-                          <span className="text-sm text-gray-800">
+                          <div className="text-sm text-gray-600">
+                            <strong>Columns:</strong>
                             <ul className="list-disc pl-5">
                               {item.columns.map(
                                 (column: any, columnIndex: number) => (
@@ -153,19 +160,19 @@ export function TemplateManager() {
                                     key={columnIndex}
                                     className="flex justify-between"
                                   >
-                                    <span className="truncate max-w-[200px]">
+                                    <span className="truncate">
                                       {column.name}
                                     </span>
-                                    <span className=" text-xs text-gray-400">
+                                    <span className="ml-2 text-xs text-gray-400">
                                       ({column.data_type})
                                     </span>
                                   </li>
                                 )
                               )}
                             </ul>
-                          </span>
+                          </div>
                         )}
-                      </span>
+                      </div>
                     ))}
                   </TableCell>
 
