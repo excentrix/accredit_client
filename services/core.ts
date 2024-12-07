@@ -13,6 +13,7 @@ export const academicYearServices = {
 export const criteriaServices = {
   fetchCriteriaList: (params?: any) =>
     api.get(`/api/criteria/list/`, { params }).then((res) => {
+      console.log("first", res);
       return res.data;
     }),
 
@@ -161,7 +162,7 @@ export const submissionStatsServices = {
 
     return api
       .get(`/api/submissions/current_academic_year/?${params.toString()}`)
-      .then((res) => res.data.results);
+      .then((res) => res.data);
   },
   fetchSubmissionById: (submissionId: string) =>
     api.get(`/api/submissions/${submissionId}/`).then((res) => res.data),

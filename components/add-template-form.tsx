@@ -554,8 +554,8 @@ export function AddTemplateForm({
       const params = new URLSearchParams();
       if (selectedBoard) params.append("board", selectedBoard.toString());
       const response = await criteriaServices.fetchCriteriaList(params);
-      console.log("Criteria response:", response.results);
-      return response.results;
+      console.log("Criteria response:", response);
+      return response;
     },
     enabled: !!selectedBoard,
   });
