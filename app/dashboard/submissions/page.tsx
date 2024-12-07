@@ -4,17 +4,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { DepartmentBreakdown } from "@/components/submissions/department-breakdown";
 import { SubmissionList } from "@/components/submissions/submission-list";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ListIcon } from "lucide-react";
+import { academicYearServices } from "@/services/core";
 
 export default function IQACSubmissionsPage() {
   const { data: currentYear, isLoading } = useQuery({
     queryKey: ["current-academic-year"],
     queryFn: async () => {
-      const response = await api.get("/academic-years/current/");
-      return response.data.data; // Access the nested data property
+      const response = await academicYearServices.fetchCurrentAcademicYear();
+      return response.data; // Access the nested data property
     },
   });
 
@@ -39,6 +40,7 @@ export default function IQACSubmissionsPage() {
             </Link>
           </Button>
         </div>
+
         <SubmissionList />
         <DepartmentBreakdown initialAcademicYear={currentYear?.id} />
       </div>

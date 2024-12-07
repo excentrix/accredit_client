@@ -12,6 +12,7 @@ import {
   Loader2,
   Plus,
   FileClock,
+  Users,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,11 +47,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Template } from "@/types/template";
 import { Board } from "@/types/board";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { NavUser } from "./nav-user";
 import path from "path";
 import { useSettings } from "@/context/settings-context";
 import { useRouter } from "next/navigation";
+import { templateServices } from "@/services/core";
 
 const mainNavItems = [
   {
@@ -61,33 +63,39 @@ const mainNavItems = [
   {
     title: "Data",
     icon: FileText,
-    path: "/data",
+    path: "/dashboard/data",
   },
   {
     title: "Submissions",
     icon: FileClock,
-    path: "/submissions",
+    path: "/dashboard/submissions",
   },
   {
     title: "Template Management",
     icon: Database,
-    path: "/template-management",
+    path: "/dashboard/template-management",
   },
   {
     title: "Export",
     icon: FileText,
-    path: "/export",
+    path: "/dashboard/export",
+  },
+  {
+    title: "User Management",
+    path: "/dashboard/user-management",
+    icon: Users, // Import Users from lucide-react
+    roles: ["admin"], // Only show for admin users
   },
 ];
 
 const contextConfig = {
-  "/data": {
+  "/dashboard/data": {
     title: "Data Entry",
     showSearch: true,
     showTemplates: true,
     searchPlaceholder: "Search templates...",
   },
-  "/template-management": {
+  "/dashboard/template-management": {
     title: "Template Management",
     showSearch: false,
     showTemplates: false,
@@ -127,19 +135,18 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       pathname.startsWith(path)
     )?.[1] || contextConfig["/dashboard"];
 
+  useEffect(() => {
+    // Redirect based on selected menu item (determined by the path or some logic)
+    if (selectedBoard && selectedAcademicYear) {
+      const currentBasePath = pathname.startsWith("/dashboard/data")
+        ? "/dashboard/data"
+        : pathname.startsWith("/dashboard/template-management")
+        ? "/dashboard/template-management"
+        : "/dashboard";
 
-  // useEffect(() => {
-  //   // Redirect based on selected menu item (determined by the path or some logic)
-  //   if (selectedBoard && selectedAcademicYear) {
-  //     const currentBasePath = pathname.startsWith("/data")
-  //       ? "/data"
-  //       : pathname.startsWith("/template-management")
-  //       ? "/template-management"
-  //       : "/dashboard";
-
-  //     router.push(currentBasePath, undefined);
-  //   }
-  // }, [selectedBoard, selectedAcademicYear]);
+      router.push(currentBasePath, undefined);
+    }
+  }, [selectedBoard, selectedAcademicYear]);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -155,21 +162,17 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         });
 
         // Make sure we're using the correct query parameters
-        const response = await api.get(`/templates/`, {
-          params: {
-            board: selectedBoard,
-            academic_year: selectedAcademicYear,
-          },
+        const response = await templateServices.fetchTemplates({
+          board: selectedBoard,
+          academic_year: selectedAcademicYear,
         });
 
-        // Log the response for debugging
-
         // Check if response.data exists and is an array
-        if (Array.isArray(response.data)) {
-          setTemplates(response.data);
-        } else if (response.data?.data && Array.isArray(response.data.data)) {
+        if (Array.isArray(response)) {
+          setTemplates(response);
+        } else if (response.data && Array.isArray(response.data)) {
           // If the response is wrapped in a data property
-          setTemplates(response.data.data);
+          setTemplates(response.data);
         } else {
           console.error("Unexpected response structure:", response.data);
           setError("Invalid response format from server");
@@ -270,9 +273,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                           <Link
                             key={template.id}
                             href={
-                              pathname.startsWith("/data")
-                                ? `/data/${template.code}`
-                                : `/template-management/${template.code}`
+                              pathname.startsWith("/dashboard/data")
+                                ? `/dashboard/data/${template.code}`
+                                : `/dashboard/template-management/${template.code}`
                             }
                             className="block"
                           >

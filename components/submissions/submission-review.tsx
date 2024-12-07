@@ -15,7 +15,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { showToast } from "@/lib/toast";
-import api from "@/lib/api";
+import api from "@/services/api";
+import { templateSubmissionServices } from "@/services/core";
 
 interface SubmissionReviewProps {
   templateCode: Template["code"];
@@ -39,15 +40,18 @@ export function SubmissionReview({
     const loadingToast = showToast.loading("Approving submission...");
 
     try {
-      const response = await api.post(`/templates/${templateCode}/approve/`, {
-        department: departmentId,
-      });
+      console.log(templateCode, departmentId);
 
-      if (response.data.status === "success") {
-        showToast.dismiss(loadingToast);
-        showToast.success("Submission approved successfully");
-        onReviewComplete();
-      }
+      // const response = await templateSubmissionServices.approveSubmission(
+      //   templateCode,
+      //   departmentId
+      // );
+
+      // if (response.status === "success") {
+      //   showToast.dismiss(loadingToast);
+      //   showToast.success("Submission approved successfully");
+      //   onReviewComplete();
+      // }
     } catch (error: any) {
       showToast.dismiss(loadingToast);
       showToast.error(
@@ -68,12 +72,13 @@ export function SubmissionReview({
     const loadingToast = showToast.loading("Rejecting submission...");
 
     try {
-      const response = await api.post(`/templates/${templateCode}/reject/`, {
-        department: departmentId,
-        reason: rejectionReason,
-      });
+      const response = await templateSubmissionServices.rejectSubmission(
+        templateCode,
+        departmentId,
+        rejectionReason
+      );
 
-      if (response.data.status === "success") {
+      if (response.status === "success") {
         showToast.dismiss(loadingToast);
         showToast.success("Submission rejected successfully");
         setIsRejectDialogOpen(false);

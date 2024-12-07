@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { Template } from "@/types/template";
 import { useTemplate } from "@/context/template-context";
 import {
@@ -30,6 +30,7 @@ import { Textarea } from "../ui/textarea";
 import { showToast } from "@/lib/toast";
 import { useSubmission } from "@/context/submission-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { sectionDataServices } from "@/services/core";
 
 interface SectionDataEntryFormProps {
   template: Template;
@@ -147,16 +148,16 @@ export function SectionDataEntryForm({
     defaultValues,
   });
 
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      console.group("Form Debug");
-      console.log("Section:", section);
-      console.log("Form Schema:", formSchema);
-      console.log("Default Values:", defaultValues);
-      console.log("Current Form Values:", form.getValues());
-      console.groupEnd();
-    }
-  }, [section, formSchema, defaultValues, form]);
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === "development") {
+  //     console.group("Form Debug");
+  //     console.log("Section:", section);
+  //     console.log("Form Schema:", formSchema);
+  //     console.log("Default Values:", defaultValues);
+  //     console.log("Current Form Values:", form.getValues());
+  //     console.groupEnd();
+  //   }
+  // }, [section, formSchema, defaultValues, form]);
 
   const onSubmit = async (values: any) => {
     if (!isEditable) {
@@ -193,12 +194,13 @@ export function SectionDataEntryForm({
         console.log("Flattened data for submission:", flattenedData);
       }
 
-      const response = await api.post(
-        `/templates/${template.code}/sections/${sectionIndex}/data/`,
+      const response = await sectionDataServices.createSectionData(
+        template.code,
+        sectionIndex,
         flattenedData
       );
-
-      if (response.data.status === "success") {
+      console.log("sectionDataServices response", response);
+      if (response.status === "success") {
         showToast.dismiss(loadingToast);
         showToast.success("Data entry has been saved successfully");
         form.reset(defaultValues);

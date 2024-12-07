@@ -38,8 +38,13 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import api from "@/lib/api";
+import api from "@/services/api";
 import { useSettings } from "@/context/settings-context";
+import {
+  academicYearServices,
+  criteriaServices,
+  templateServices,
+} from "@/services/core";
 
 interface Template {
   id: string;
@@ -61,8 +66,8 @@ export default function ExportPage() {
     useQuery({
       queryKey: ["currentAcademicYear"],
       queryFn: async () => {
-        const response = await api.get("/academic-years/current/");
-        return response.data.data; // Note: Adjust this based on your API response structure
+        const response = await academicYearServices.fetchCurrentAcademicYear();
+        return response.data; // Note: Adjust this based on your API response structure
       },
     });
 
@@ -70,8 +75,8 @@ export default function ExportPage() {
   const { data: criteria } = useQuery({
     queryKey: ["criteria", selectedBoard],
     queryFn: async () => {
-      const response = await api.get(`/criteria/list/?board=${selectedBoard}`);
-      return response.data;
+      const response = await criteriaServices.fetchCriteriaList(selectedBoard);
+      return response;
     },
     enabled: !!selectedBoard, // Only fetch when board is selected
   });
@@ -84,8 +89,8 @@ export default function ExportPage() {
       if (selectedBoard) params.append("board", selectedBoard.toString());
       if (selectedCriterion) params.append("criterion", selectedCriterion);
 
-      const response = await api.get(`/templates/?${params.toString()}`);
-      return response.data;
+      const response = await templateServices.fetchTemplates(params);
+      return response;
     },
     enabled: !!selectedBoard, // Only fetch when board is selected
   });
@@ -141,16 +146,10 @@ export default function ExportPage() {
         ...(params?.template_code && { template_code: params.template_code }),
       });
 
-      const response = await api.get(`/templates/export/?${queryParams}`, {
-        responseType: "blob",
-        // headers: {
-        //   Accept:
-        //     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        // },
-      });
+      const response = await templateServices.exportTemplate(queryParams);
 
       // Create blob and download
-      const blob = new Blob([response.data], {
+      const blob = new Blob([response], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 

@@ -1,36 +1,44 @@
-export type UserRole = "faculty" | "iqac_director" | "admin";
-
 export interface User {
   id: number;
-  username: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  role: UserRole;
-  department?: {
-    id: number;
-    name: string;
-    code: string;
-  };
+  username: string;
+  usn: string;
+  first_name?: string;
+  last_name?: string;
+  is_active: boolean;
+  is_staff: boolean;
+  date_joined: string;
+  roles: Role[];
+  department?: Department;
+  individual_permissions?: Permission[];
 }
 
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+export interface Role {
+  id: number;
+  name: string;
+  description?: string;
+}
+export interface Module {
+  id: string;
+  name: string;
+  description?: string;
+}
+export interface Permission {
+  id: number;
+  module: Module;
+  module_name: string;
+  resource: string;
+  action: string;
+  codename: string;
+  description: string;
+  full_codename: string;
+  roles?: Role[];
 }
 
-export interface LoginResponse {
-  status: "success" | "error";
-  data?: {
-    user: User;
-    tokens: {
-      access: string;
-      refresh: string;
-    };
-  };
-  message?: string;
+// types/auth.ts
+export interface UserPermission extends Permission {
+  source: "direct" | "role";
+  role_name?: string; // if from role
 }
 
 export interface Department {
