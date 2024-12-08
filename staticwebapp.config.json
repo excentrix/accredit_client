@@ -16,7 +16,7 @@
     "exclude": ["/images/*.{png,jpg,gif}", "/css/*"]
   },
   "globalHeaders": {
-    "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' https://mango-sand-079ab4e00.4.azurestaticapps.net;",
+    "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' https://app-accredit-backend-dev-centralindia.azurewebsites.net/;",
     "X-Frame-Options": "DENY",
     "X-XSS-Protection": "1; mode=block"
   },
