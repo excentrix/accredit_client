@@ -125,7 +125,7 @@ export function SubmissionStatus() {
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
                     <span className="font-medium text-yellow-600">
-                      Currently awaiting IQAC Director's review
+                      Currently awaiting IQAC Director&apos;s review
                     </span>
                   </div>
                 </div>

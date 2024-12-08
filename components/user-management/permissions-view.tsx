@@ -54,7 +54,7 @@ export function PermissionsView() {
   // Get unique modules from permissions
   const uniqueModules = useMemo(() => {
     const moduleMap = new Map();
-    permissions.forEach((permission) => {
+    permissions.forEach((permission: Permission) => {
       if (permission.module && !moduleMap.has(permission.module_name)) {
         moduleMap.set(permission.module_name, permission.module);
       }
@@ -65,7 +65,7 @@ export function PermissionsView() {
   // Get unique resources
   const uniqueResources = useMemo(() => {
     return Array.from(
-      new Set(permissions.map((p) => p.resource).filter(Boolean))
+      new Set(permissions.map((p: Permission) => p.resource).filter(Boolean))
     );
   }, [permissions]);
 
@@ -101,7 +101,7 @@ export function PermissionsView() {
 
   // Group permissions by module and resource
   const groupedPermissions = useMemo(() => {
-    return permissions.reduce((acc: GroupedPermissions, permission) => {
+    return permissions.reduce((acc: GroupedPermissions, permission:Permission) => {
       const moduleName = permission.module_name || "Other";
       const resource = permission.resource || "General";
 
@@ -208,7 +208,7 @@ export function PermissionsView() {
           <SelectContent>
             <SelectItem value="all">All Modules</SelectItem>
             {permissions
-              .reduce((acc: Module[], curr) => {
+              .reduce((acc: Module[], curr: any) => {
                 if (!acc.find((m) => m === curr)) {
                   acc.push(curr);
                 }

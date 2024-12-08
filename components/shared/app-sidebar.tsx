@@ -161,17 +161,17 @@ export function AppSidebar({
     return configEntry ? configEntry[1] : null;
   }, [pathname]);
 
-  useEffect(() => {
-    if (selectedBoard && selectedAcademicYear) {
-      const currentBasePath = pathname.startsWith("/data")
-        ? "/data"
-        : pathname.startsWith("/template-management")
-        ? "/template-management"
-        : "/dashboard";
+  // useEffect(() => {
+  //   if (selectedBoard && selectedAcademicYear) {
+  //     const currentBasePath = pathname.startsWith("/data")
+  //       ? "/data"
+  //       : pathname.startsWith("/template-management")
+  //       ? "/template-management"
+  //       : "/dashboard";
 
-      router.push(currentBasePath, undefined);
-    }
-  }, [selectedBoard, selectedAcademicYear]);
+  //     router.push(currentBasePath, undefined);
+  //   }
+  // }, [selectedBoard, selectedAcademicYear]);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -217,6 +217,8 @@ export function AppSidebar({
     currentSidebarConfig,
     selectedBoard,
     selectedAcademicYear,
+    pathname,
+    router,
   ]);
 
   const groupedTemplates = React.useMemo(() => {

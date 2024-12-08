@@ -32,13 +32,17 @@ import {
 } from "@/components/ui/tooltip";
 import { showToast } from "@/lib/toast";
 
+interface PermissionWithSource extends Omit<Permission, "roles"> {
+  source: "direct" | "role";
+}
+
 interface UserPermissionsDialogProps {
   user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-function groupPermissions(permissions: Permission[]) {
+function groupPermissions(permissions: PermissionWithSource[]) {
   return permissions.reduce((acc, permission) => {
     const moduleName = permission.module_name || "Other";
     if (!acc[moduleName]) {
@@ -81,19 +85,36 @@ export function UserPermissionsDialog({
 
   // Combine and process permissions
   const allPermissions = useMemo(() => {
-    const directSet = new Set(directPermissions.map((p) => p.id));
+    const directSet = new Set(directPermissions.map((p: Permission) => p.id));
 
     return {
-      direct: directPermissions.map((p) => ({
-        ...p,
-        source: "direct" as const,
-      })),
-      role: rolePermissions.map((p) => ({ ...p, source: "role" as const })),
+      direct: directPermissions.map(
+        (p: Permission): PermissionWithSource => ({
+          ...p,
+          source: "direct",
+        })
+      ),
+      role: rolePermissions.map(
+        (p: Permission): PermissionWithSource => ({
+          ...p,
+          source: "role",
+        })
+      ),
       all: [
-        ...directPermissions.map((p) => ({ ...p, source: "direct" as const })),
+        ...directPermissions.map(
+          (p: Permission): PermissionWithSource => ({
+            ...p,
+            source: "direct",
+          })
+        ),
         ...rolePermissions
-          .filter((p) => !directSet.has(p.id))
-          .map((p) => ({ ...p, source: "role" as const })),
+          .filter((p: Permission) => !directSet.has(p.id))
+          .map(
+            (p: Permission): PermissionWithSource => ({
+              ...p,
+              source: "role",
+            })
+          ),
       ],
     };
   }, [directPermissions, rolePermissions]);
@@ -101,12 +122,12 @@ export function UserPermissionsDialog({
   // Initialize selected permissions with user's current direct permissions
   useEffect(() => {
     if (directPermissions.length > 0) {
-      setSelectedPermissions(directPermissions.map((p) => p.id));
+      setSelectedPermissions(directPermissions.map((p: Permission) => p.id));
     }
   }, [directPermissions]);
 
   // Filter permissions based on search
-  const filterPermissions = (permissions: typeof allPermissions.all) => {
+  const filterPermissions = (permissions: PermissionWithSource[]) => {
     return permissions.filter(
       (permission) =>
         permission.full_codename
@@ -126,19 +147,27 @@ export function UserPermissionsDialog({
 
   const handleSave = async () => {
     try {
-      // Remove permissions that were unselected
       const permissionsToRemove = directPermissions
-        .filter((permission) => !selectedPermissions.includes(permission.id))
-        .map((permission) => permission.id);
+        .filter(
+          (permission: Permission) =>
+            !selectedPermissions.includes(permission.id)
+        )
+        .map((permission: Permission) => permission.id);
 
-      // Add newly selected permissions
       const permissionsToAdd = selectedPermissions.filter(
-        (permissionId) => !directPermissions.find((p) => p.id === permissionId)
+        (permissionId: number) =>
+          !directPermissions.find((p: Permission) => p.id === permissionId)
+      );
+
+      await Promise.all(
+        permissionsToRemove.map((permissionId: number) =>
+          userManagementService.revokePermissionFromUser(user.id, permissionId)
+        )
       );
 
       // Process removals
       await Promise.all(
-        permissionsToRemove.map((permissionId) =>
+        permissionsToRemove.map((permissionId: number) =>
           userManagementService.revokePermissionFromUser(user.id, permissionId)
         )
       );
@@ -179,7 +208,7 @@ export function UserPermissionsDialog({
           <DialogTitle>Permissions for {user.username}</DialogTitle>
           <DialogDescription>
             Manage user permissions. Direct permissions can be modified, while
-            role-based permissions are inherited from the user's roles.
+            role-based permissions are inherited from the user&apos;s roles.
           </DialogDescription>
         </DialogHeader>
 
@@ -259,9 +288,12 @@ export function UserPermissionsDialog({
                                       checked={selectedPermissions.includes(
                                         permission.id
                                       )}
-                                      disabled={permission.source === "role"}
+                                      disabled={
+                                        (permission as PermissionWithSource)
+                                          .source === "role"
+                                      }
                                       onCheckedChange={() => {
-                                        if (permission.source === "direct") {
+                                        if ((permission as PermissionWithSource).source === "direct") {
                                           setSelectedPermissions((prev) =>
                                             prev.includes(permission.id)
                                               ? prev.filter(
@@ -299,7 +331,7 @@ export function UserPermissionsDialog({
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  {permission.source === "direct" ? (
+                                  {(permission as PermissionWithSource).source === "direct" ? (
                                     <Badge variant="default" className="gap-1">
                                       <UserIcon className="h-3 w-3" />
                                       Direct

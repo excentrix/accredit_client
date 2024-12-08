@@ -244,26 +244,27 @@ export function SectionDataTable({
   const [rowToDelete, setRowToDelete] = useState<number | null>(null);
 
   // Search functionality with debounce
-  const debouncedSearch = useCallback(
-    debounce((query: string, columns: FlattenedColumn[], data: any[]) => {
-      if (!query) {
-        setFilteredData(data);
-        return;
-      }
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((query: string, columns: FlattenedColumn[], data: any[]) => {
+        if (!query) {
+          setFilteredData(data);
+          return;
+        }
 
-      const lowercaseQuery = query.toLowerCase();
-      const filtered = data.filter((row) => {
-        return columns.some((col) => {
-          const value = String(
-            getNestedValue(row.data, col.path) || ""
-          ).toLowerCase();
-          return value.includes(lowercaseQuery);
+        const lowercaseQuery = query.toLowerCase();
+        const filtered = data.filter((row) => {
+          return columns.some((col) => {
+            const value = String(
+              getNestedValue(row.data, col.path) || ""
+            ).toLowerCase();
+            return value.includes(lowercaseQuery);
+          });
         });
-      });
 
-      setFilteredData(filtered);
-    }, 300),
-    []
+        setFilteredData(filtered);
+      }, 300),
+    [] // Empty dependencies since this function doesn't depend on any props or state
   );
 
   // Update filtered data when search or data changes
@@ -277,29 +278,14 @@ export function SectionDataTable({
     }));
 
     debouncedSearch(searchQuery, flatColumns, cleanedData);
-  }, [searchQuery, flatColumns, sectionData, sectionIndex]);
+  }, [searchQuery, flatColumns, sectionData, sectionIndex, debouncedSearch]);
 
   // Initial data fetch
   useEffect(() => {
     refreshSectionData(sectionIndex);
-  }, [sectionIndex]);
+  }, [sectionIndex, refreshSectionData]);
 
   // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (editingRow !== null) {
-        if (e.ctrlKey && e.key === "s") {
-          e.preventDefault();
-          handleSave(editingRow);
-        } else if (e.key === "Escape") {
-          handleCancel();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyPress);
-    return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [editingRow, editedData]);
 
   // CRUD Operations
   const handleEdit = (rowIndex: number) => {
@@ -311,42 +297,49 @@ export function SectionDataTable({
     setEditedData(rowData);
   };
 
-  const handleSave = async (rowIndex: number) => {
-    const loadingToast = showToast.loading("Updating data...");
-    try {
-      const currentData = sectionData[sectionIndex] || [];
+  const handleSave = useCallback(
+    async (rowIndex: number) => {
+      const loadingToast = showToast.loading("Updating data...");
+      try {
+        const currentData = sectionData[sectionIndex] || [];
+        const dataToSend = {
+          data: editedData,
+        };
 
-      // Send data without nesting
-      const dataToSend = {
-        data: editedData, // Send flat data structure
-      };
+        const response = await sectionDataServices.updateSectionDataRow(
+          template.code,
+          sectionIndex,
+          currentData[rowIndex].id,
+          dataToSend
+        );
 
-      console.log("Saving data:", dataToSend); // Debug log
-
-      const response = await sectionDataServices.updateSectionDataRow(
-        template.code,
-        sectionIndex,
-        currentData[rowIndex].id,
-        dataToSend
-      );
-
-      if (response.status === "success") {
+        if (response.status === "success") {
+          showToast.dismiss(loadingToast);
+          showToast.success("Data updated successfully");
+          await refreshSectionData(sectionIndex);
+          setEditingRow(null);
+          setEditedData(null);
+        }
+      } catch (error: any) {
         showToast.dismiss(loadingToast);
-        showToast.success("Data updated successfully");
-        await refreshSectionData(sectionIndex);
-        setEditingRow(null);
-        setEditedData(null);
+        showToast.error(
+          error.response?.data?.message || "Failed to update data"
+        );
       }
-    } catch (error: any) {
-      showToast.dismiss(loadingToast);
-      showToast.error(error.response?.data?.message || "Failed to update data");
-    }
-  };
+    },
+    [
+      editedData,
+      refreshSectionData,
+      sectionData,
+      sectionIndex,
+      template.code,
+    ]
+  );
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setEditingRow(null);
     setEditedData(null);
-  };
+  }, []);
 
   const handleDelete = async (rowIndex: number) => {
     const loadingToast = showToast.loading("Deleting data...");
@@ -370,6 +363,22 @@ export function SectionDataTable({
       showToast.error(error.response?.data?.message || "Failed to delete data");
     }
   };
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (editingRow !== null) {
+        if (e.ctrlKey && e.key === "s") {
+          e.preventDefault();
+          handleSave(editingRow);
+        } else if (e.key === "Escape") {
+          handleCancel();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [editingRow, handleSave, handleCancel]);
 
   const renderCell = (
     row: any,

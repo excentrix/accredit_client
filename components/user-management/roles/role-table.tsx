@@ -67,7 +67,7 @@ export function RoleTable() {
   });
 
   const filteredRoles =
-    roles?.filter((role) =>
+    roles?.filter((role: Role) =>
       role.name.toLowerCase().includes(searchQuery.toLowerCase())
     ) ?? [];
 
@@ -109,7 +109,7 @@ export function RoleTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRoles.map((role) => (
+            {filteredRoles.map((role: any) => (
               <TableRow key={role.id}>
                 <TableCell className="font-medium">{role.name}</TableCell>
                 <TableCell>{role.description}</TableCell>
@@ -118,11 +118,13 @@ export function RoleTable() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
-                    {role.permissions.slice(0, 3).map((permission) => (
-                      <Badge key={permission.id} variant="outline">
-                        {permission.codename}
-                      </Badge>
-                    ))}
+                    {role.permissions
+                      .slice(0, 3)
+                      .map((permission: Permission) => (
+                        <Badge key={permission.id} variant="outline">
+                          {permission.codename}
+                        </Badge>
+                      ))}
                     {role.permissions.length > 3 && (
                       <Badge variant="outline">
                         +{role.permissions.length - 3} more

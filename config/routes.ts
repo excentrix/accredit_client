@@ -1,5 +1,5 @@
 export const publicRoutes = [
-  "/auth/login",
+  "/login",
   "/auth/register",
   "/auth/forgot-password",
   // Add other public routes

@@ -169,6 +169,8 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
     }
   }
 
+  // console.log(submission);
+
   return (
     <div className="space-y-6">
       {/* Back Button */}
@@ -231,22 +233,22 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
             <CardContent>
               <Tabs defaultValue="section-0" className="space-y-4">
                 <TabsList className="w-full flex-wrap h-auto gap-2 p-2">
-                  {[
-                    ...new Set(
+                  {Array.from(
+                    new Set(
                       submission.data_rows.map((row: any) => row.section_index)
-                    ),
-                  ].map((sectionIndex) => {
+                    )
+                  ).map((sectionIndex) => {
                     const sectionData = submission.data_rows.filter(
                       (row: any) => row.section_index === sectionIndex
                     );
 
                     return (
                       <TabsTrigger
-                        key={sectionIndex}
+                        key={String(sectionIndex)}
                         value={`section-${sectionIndex}`}
                         className="flex items-center gap-2"
                       >
-                        <span>Section {sectionIndex + 1}</span>
+                        <span>Section {(sectionIndex as number) + 1}</span>
                         <Badge variant="secondary" className="ml-2">
                           {sectionData.length} entries
                         </Badge>
@@ -255,18 +257,18 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
                   })}
                 </TabsList>
 
-                {[
-                  ...new Set(
+                {Array.from(
+                  new Set(
                     submission?.data_rows?.map((row: any) => row.section_index)
-                  ),
-                ].map((sectionIndex) => {
+                  )
+                ).map((sectionIndex) => {
                   const sectionData = submission.data_rows.filter(
                     (row: any) => row.section_index === sectionIndex
                   );
 
                   return (
                     <TabsContent
-                      key={sectionIndex}
+                      key={String(sectionIndex)}
                       value={`section-${sectionIndex}`}
                     >
                       <div className="space-y-4">
@@ -274,7 +276,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
                         <div className="flex items-center justify-between">
                           <div>
                             <h3 className="text-lg font-semibold">
-                              Section {sectionIndex + 1} Data
+                              Section {(sectionIndex as number) + 1} Data
                             </h3>
                             <p className="text-sm text-muted-foreground">
                               Showing {sectionData.length} entries
@@ -291,7 +293,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
                                 downloadCSV(
                                   csv,
                                   `${submission.template_code}_section${
-                                    sectionIndex + 1
+                                    (sectionIndex as number) + 1
                                   }.csv`
                                 );
                               }}

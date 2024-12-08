@@ -1,7 +1,7 @@
 // components/data-management/template-manager.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ export function TemplateManager() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await templateServices.fetchTemplates({
@@ -39,11 +39,11 @@ export function TemplateManager() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedBoard, selectedAcademicYear]);
 
   useEffect(() => {
     fetchTemplates();
-  }, [selectedAcademicYear, selectedBoard]);
+  }, [fetchTemplates]);
 
   const handleEdit = (template: Template) => {
     router.push(`/template-management/edit?code=${template.code}`);

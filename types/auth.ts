@@ -17,6 +17,7 @@ export interface Role {
   id: number;
   name: string;
   description?: string;
+  permissions: Permission[];
 }
 export interface Module {
   id: string;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Template } from "@/types/template";;
+import { Template } from "@/types/template";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { AddTemplateForm } from "./add-template-form";
@@ -33,7 +33,7 @@ export function TemplateFormClient({ action, code }: TemplateFormClientProps) {
         setTemplate(response);
       } catch (error) {
         showToast.error("Failed to fetch template details");
-        router.push("/template-management");
+        // router.push("/template-management");
       } finally {
         setIsLoading(false);
       }

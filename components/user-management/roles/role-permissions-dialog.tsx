@@ -33,11 +33,11 @@ interface RolePermissionsDialogProps {
 
 function groupPermissions(permissions: Permission[]) {
   return permissions.reduce((acc, permission) => {
-    const module = permission.module || "Other";
-    if (!acc[module]) {
-      acc[module] = [];
+    const mod = permission.module_name || "Other";
+    if (!acc[mod]) {
+      acc[mod] = [];
     }
-    acc[module].push(permission);
+    acc[mod].push(permission);
     return acc;
   }, {} as Record<string, Permission[]>);
 }
@@ -68,7 +68,7 @@ export function RolePermissionsDialog({
 
   const filteredAndGroupedPermissions = groupPermissions(
     permissions.filter(
-      (permission) =>
+      (permission:any) =>
         permission.codename.toLowerCase().includes(searchQuery.toLowerCase()) ||
         permission.module?.toLowerCase().includes(searchQuery.toLowerCase())
     )
@@ -89,7 +89,7 @@ export function RolePermissionsDialog({
     setSelectedPermissions((prev) => {
       const permissionIds = modulePermissions.map((p) => p.id);
       if (selected) {
-        return [...new Set([...prev, ...permissionIds])];
+        return Array.from(new Set([...prev, ...permissionIds]));
       } else {
         return prev.filter((id) => !permissionIds.includes(id));
       }

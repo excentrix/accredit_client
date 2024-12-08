@@ -1,7 +1,6 @@
 // app/dashboard/page.tsx
 "use client";
 
-
 import { useAuth } from "@/context/use-auth-context";
 import { DepartmentBreakdown } from "@/components/submissions/department-breakdown";
 import { SubmissionStats } from "@/components/submissions/submission-stats";
@@ -43,23 +42,6 @@ const COLORS = [
 export default function DashboardPage() {
   const { user } = useAuth();
   const { selectedBoard, selectedAcademicYear } = useSettings();
-
-  if (!selectedBoard || !selectedAcademicYear) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold">
-            Board and Academic Year Required
-          </h2>
-          <p className="text-muted-foreground">
-            Please select a board and academic year from the settings menu.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) return null;
 
   // Activity Timeline
   const { data: activityTimeline } = useQuery({
@@ -123,6 +105,20 @@ export default function DashboardPage() {
   });
 
   if (!user) return null;
+  if (!selectedBoard || !selectedAcademicYear) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">
+            Board and Academic Year Required
+          </h2>
+          <p className="text-muted-foreground">
+            Please select a board and academic year from the settings menu.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const isAdmin = user.roles.some((role) => role.name === "admin");
   const isIQACDirector = user.roles.some(

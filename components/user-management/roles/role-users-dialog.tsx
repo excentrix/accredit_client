@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Role, User } from "@/types/auth";
+import { Department, Role, User } from "@/types/auth";
 import { Search, UserMinus, UserPlus } from "lucide-react";
 import userManagementService from "@/services/user_management";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -80,7 +80,7 @@ export function RoleUsersDialog({
   });
 
   // Filter users based on search and department
-  const filteredUsers = roleUsers.filter((user) => {
+  const filteredUsers = roleUsers.filter((user: User) => {
     const matchesSearch =
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -94,7 +94,7 @@ export function RoleUsersDialog({
 
   // Get users not in role for adding
   const usersNotInRole = allUsers.filter(
-    (user) => !roleUsers.find((ru) => ru.id === user.id)
+    (user: User) => !roleUsers.find((ru: User) => ru.id === user.id)
   );
 
   const handleRemoveUser = async (user: User) => {
@@ -110,9 +110,9 @@ export function RoleUsersDialog({
     }
   };
 
-  const handleAddUser = async (userId: number) => {
+  const handleAddUser = async (userId: string) => {
     try {
-      await userManagementService.assignRole(userId, role.id);
+      await userManagementService.assignRole(Number(userId), role.id);
       queryClient.invalidateQueries({ queryKey: ["role-users", role.id] });
       queryClient.invalidateQueries({ queryKey: ["roles"] });
 
@@ -154,7 +154,7 @@ export function RoleUsersDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                {departments.map((dept) => (
+                {departments.map((dept: Department) => (
                   <SelectItem key={dept.id} value={dept.id.toString()}>
                     {dept.name}
                   </SelectItem>
@@ -186,7 +186,7 @@ export function RoleUsersDialog({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
+                {filteredUsers.map((user: User) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -256,8 +256,8 @@ export function RoleUsersDialog({
               <SelectValue placeholder="Select a user" />
             </SelectTrigger>
             <SelectContent>
-              {usersNotInRole.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
+              {usersNotInRole.map((user: User) => (
+                <SelectItem key={user.id} value={user.id.toString()}>
                   {user.username} ({user.email})
                 </SelectItem>
               ))}
