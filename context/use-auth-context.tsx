@@ -71,7 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!refresh) return null;
 
       const response = await fetch(
-        "http://127.0.0.1:8000/user/token/refresh/",
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+        }/user/token/refresh/`,
         {
           method: "POST",
           headers: {
@@ -106,14 +108,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: "AUTH_START" });
 
-      const response = await fetch("http://127.0.0.1:8000/user/token/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+        }/user/token/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -138,13 +145,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      await fetch("http://127.0.0.1:8000/user/logout/", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: "include",
-      });
+      await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+        }/user/logout/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -157,12 +169,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserDetails = async (token: string): Promise<User | null> => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/user/users/me/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+        }/user/users/me/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
