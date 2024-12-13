@@ -1,6 +1,6 @@
 // services/user_management.ts
 import api from "./api";
-import { User, Role, Permission, Department } from "@/types/auth";
+import { User, Role, Permission, Department, UserUpdateData } from "@/types/auth";
 import Cookies from "js-cookie";
 
 
@@ -49,7 +49,7 @@ const userManagementService = {
     return response.data;
   },
 
-  updateUser: async (userId: number, userData: Partial<User>) => {
+  updateUser: async (userId: number, userData: UserUpdateData) => {
     const response = await api.put(`/user/users/${userId}/`, userData);
     return response.data;
   },

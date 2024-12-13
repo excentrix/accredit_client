@@ -27,6 +27,41 @@ import { Loader2 } from "lucide-react";
 import { showToast } from "@/lib/toast";
 import { Department, Role } from "@/types/auth";
 
+interface BaseUserFormData {
+  username: string;
+  email: string;
+  usn: string;
+  first_name?: string;
+  last_name?: string;
+  department_id: string;
+  roles: string[]; // Role names for form
+  is_active: boolean;
+}
+
+// Form data for creating a user
+export interface CreateUserFormData extends BaseUserFormData {
+  password: string;
+  confirm_password: string;
+}
+
+// Form data for updating a user
+export interface UpdateUserFormData extends BaseUserFormData {
+  password?: string;
+  confirm_password?: string;
+}
+
+export interface UserApiData {
+  username: string;
+  email: string;
+  usn: string;
+  first_name?: string;
+  last_name?: string;
+  department_id: string;
+  role_ids: number[];
+  is_active: boolean;
+  password?: string;
+}
+
 const userFormSchema = z
   .object({
     username: z
@@ -34,10 +69,7 @@ const userFormSchema = z
       .min(3, "Username must be at least 3 characters")
       .max(50, "Username must not exceed 50 characters"),
     email: z.string().email("Invalid email address"),
-    usn: z
-      .string()
-      .min(3, "USN must be at least 3 characters")
-      .max(20, "USN must not exceed 20 characters"),
+    usn: z.string(),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -97,17 +129,22 @@ export function UserForm({ userId, onSuccess }: UserFormProps) {
 
   // Mutations
   const createUserMutation = useMutation({
-    mutationFn: (data: UserFormData) =>
-      userManagementService.createUser({
+    mutationFn: (data: CreateUserFormData) => {
+      const apiData: UserApiData = {
         ...data,
         role_ids: data.roles
-          .map((role: string) => {
-            const roleObj = rolesData?.find((r: Role) => r.name === role);
-            return roleObj ? roleObj.id : null;
+          .map((roleName) => {
+            const role = rolesData?.find((r: Role) => r.name === roleName);
+            return role?.id;
           })
-          .filter((id: number | null): id is number => id !== null),
-        department_id: data.department_id,
-      }),
+          .filter((id): id is number => id !== undefined),
+        password: data.password,
+      };
+      return userManagementService.createUser({
+        ...apiData,
+        password: apiData.password || "",
+      });
+    },
     onSuccess: () => {
       showToast.success("User created successfully");
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -119,12 +156,18 @@ export function UserForm({ userId, onSuccess }: UserFormProps) {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: (data: UserFormData) =>
-      userManagementService.updateUser(Number(userId), {
+    mutationFn: (data: UpdateUserFormData) => {
+      const apiData: UserApiData = {
         ...data,
-        role_ids: data.roles.map((role) => role),
-        department_id: data.department_id,
-      }),
+        role_ids: data.roles
+          .map((roleName) => {
+            const role = rolesData?.find((r: Role) => r.name === roleName);
+            return role?.id;
+          })
+          .filter((id): id is number => id !== undefined),
+      };
+      return userManagementService.updateUser(Number(userId), apiData);
+    },
     onSuccess: () => {
       showToast.success("User updated successfully");
       queryClient.invalidateQueries({ queryKey: ["users"] });

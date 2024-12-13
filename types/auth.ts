@@ -62,3 +62,16 @@ export interface ApiResponse<T> {
   message?: string;
   errors?: Record<string, string[]>;
 }
+
+export interface UserUpdateData {
+  email?: string;
+  username?: string;
+  usn?: string;
+  first_name?: string;
+  last_name?: string;
+  is_active?: boolean;
+  is_staff?: boolean;
+  role_ids?: number[];
+  department_id?: string;
+  password?: string;
+}
