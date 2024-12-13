@@ -1,10 +1,10 @@
-// context/use-auth-context.tsx
-
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { User, AuthState } from "@/types/auth";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<boolean>;
@@ -61,37 +61,59 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const router = useRouter();
 
+  const setAuthCookies = (access: string, refresh: string) => {
+    Cookies.set("accessToken", access, {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      expires: 1, // 1 day
+    });
+
+    Cookies.set("refreshToken", refresh, {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      expires: 7, // 7 days
+    });
+  };
+
+  const clearAuthCookies = () => {
+    Cookies.remove("accessToken", { path: "/" });
+    Cookies.remove("refreshToken", { path: "/" });
+  };
+
   const refreshUserToken = async (): Promise<string | null> => {
     try {
-      const refresh = localStorage.getItem("refreshToken");
+      const refresh = Cookies.get("refreshToken");
       if (!refresh) return null;
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/user/token/refresh/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ refresh }),
-        }
-      );
+      const response = await fetch(`${API_URL}/user/token/refresh/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ refresh }),
+      });
 
       const data = await response.json();
 
       if (response.ok && data.access) {
-        localStorage.setItem("accessToken", data.access);
+        Cookies.set("accessToken", data.access, {
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/",
+          expires: 1,
+        });
         return data.access;
       }
 
-      // If refresh failed, logout
       if (response.status === 401) {
         await logout();
       }
@@ -108,28 +130,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: "AUTH_START" });
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/user/token/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await fetch(`${API_URL}/user/token/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await response.json();
 
       if (response.ok && data.access && data.refresh) {
-        localStorage.setItem("accessToken", data.access);
-        localStorage.setItem("refreshToken", data.refresh);
-
+        setAuthCookies(data.access, data.refresh);
         dispatch({ type: "AUTH_SUCCESS", payload: data.user });
-        router.push("/dashboard");
         return true;
       } else {
         throw new Error(data.detail || "Login failed");
@@ -144,24 +158,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/user/logout/`,
-        {
+      const accessToken = Cookies.get("accessToken");
+      if (accessToken) {
+        await fetch(`${API_URL}/user/logout/`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           credentials: "include",
-        }
-      );
+        });
+      }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      clearAuthCookies();
       dispatch({ type: "AUTH_LOGOUT" });
       router.push("/login");
     }
@@ -169,17 +179,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserDetails = async (token: string): Promise<User | null> => {
     try {
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        }/user/users/me/`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_URL}/user/users/me/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -196,17 +201,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "AUTH_START" });
 
     try {
-      let token = localStorage.getItem("accessToken");
+      let token = Cookies.get("accessToken");
 
       if (!token) {
         dispatch({ type: "AUTH_LOGOUT" });
         return;
       }
 
-      // Try to get user details with current token
       let userDetails = await fetchUserDetails(token);
 
-      // If failed, try to refresh token
       if (!userDetails) {
         const newToken = await refreshUserToken();
         if (newToken) {
@@ -217,7 +220,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userDetails) {
         dispatch({ type: "AUTH_SUCCESS", payload: userDetails });
       } else {
-        // If both attempts failed, logout
         await logout();
       }
     } catch (error) {
@@ -226,32 +228,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Set up automatic token refresh
   useEffect(() => {
     if (state.isAuthenticated) {
-      const token = localStorage.getItem("accessToken");
+      const token = Cookies.get("accessToken");
       if (token) {
         try {
-          // Decode token to get expiration time
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          const expiresIn = payload.exp * 1000 - Date.now();
+          const decoded: any = jwtDecode(token);
+          const expiresIn = decoded.exp * 1000 - Date.now();
 
-          // Set up refresh 1 minute before expiration
+          // Refresh token 1 minute before expiration
           const timeoutId = setTimeout(() => {
-            refreshUserToken().then((newToken) => {
-              if (!newToken) {
-                logout();
-              }
-            });
+            refreshUserToken().catch(() => logout());
           }, Math.max(0, expiresIn - 60000));
 
           return () => clearTimeout(timeoutId);
         } catch (error) {
           console.error("Error setting up token refresh:", error);
+          logout().catch(console.error);
         }
       }
     }
   }, [state.isAuthenticated]);
 
+  // Initial auth check
   useEffect(() => {
     checkAuth();
   }, []);

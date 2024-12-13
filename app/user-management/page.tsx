@@ -42,7 +42,7 @@ export default function UsersPage() {
               Add a new user and assign their roles and permissions.
             </DialogDescription>
           </DialogHeader>
-          <UserForm onSubmit={() => setShowCreateDialog(false)} />
+          <UserForm onSuccess={() => setShowCreateDialog(false)} />
         </DialogContent>
       </Dialog>
     </div>

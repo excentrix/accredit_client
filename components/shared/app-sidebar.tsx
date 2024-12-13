@@ -44,12 +44,13 @@ import { useSettings } from "@/context/settings-context";
 import { useRouter } from "next/navigation";
 import { templateServices } from "@/services/core";
 import { User } from "@/types/auth";
+import { useQuery } from "@tanstack/react-query";
 
 interface NavItem {
   title: string;
   icon: LucideIcon;
   path: string;
-  roles: string[]; // Role names
+  roles: string[];
 }
 
 const mainNavItems: NavItem[] = [
@@ -97,7 +98,6 @@ const mainNavItems: NavItem[] = [
   },
 ];
 
-// Helper function to check if user has required role
 function hasRole(user: User, requiredRoles: string[]): boolean {
   return requiredRoles.some((role) =>
     user.roles.some((userRole) => userRole.name === role)
@@ -119,8 +119,6 @@ const sidebar2Config = {
   },
 } as const;
 
-// type SidebarConfigKeys = keyof typeof sidebar2Config;
-
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   showSecondary?: boolean;
 }
@@ -139,12 +137,9 @@ export function AppSidebar({
     isLoading: settingsLoading,
   } = useSettings();
 
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Check if current path should show secondary sidebar
@@ -161,65 +156,34 @@ export function AppSidebar({
     return configEntry ? configEntry[1] : null;
   }, [pathname]);
 
-  // useEffect(() => {
-  //   if (selectedBoard && selectedAcademicYear) {
-  //     const currentBasePath = pathname.startsWith("/data")
-  //       ? "/data"
-  //       : pathname.startsWith("/template-management")
-  //       ? "/template-management"
-  //       : "/dashboard";
+  // Use React Query for template fetching
+  const {
+    data: templates = [],
+    isLoading,
+    error,
+  } = useQuery<Template[]>({
+    queryKey: ["templates", selectedBoard, selectedAcademicYear, user?.id],
+    queryFn: async () => {
+      const response = await templateServices.fetchTemplates({
+        board: selectedBoard,
+        academic_year: selectedAcademicYear,
+      });
 
-  //     router.push(currentBasePath, undefined);
-  //   }
-  // }, [selectedBoard, selectedAcademicYear]);
-
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      if (
-        !showSecondary ||
-        !currentSidebarConfig?.showTemplates ||
-        !selectedBoard ||
-        !selectedAcademicYear
-      ) {
-        return;
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response.data && Array.isArray(response.data)) {
+        return response.data;
       }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const response = await templateServices.fetchTemplates({
-          board: selectedBoard,
-          academic_year: selectedAcademicYear,
-        });
-
-        if (Array.isArray(response)) {
-          setTemplates(response);
-        } else if (response.data && Array.isArray(response.data)) {
-          setTemplates(response.data);
-        } else {
-          console.error("Unexpected response structure:", response);
-          setError("Invalid response format from server");
-        }
-      } catch (error) {
-        console.error("Failed to fetch templates:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to fetch templates"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTemplates();
-  }, [
-    showSecondary,
-    currentSidebarConfig,
-    selectedBoard,
-    selectedAcademicYear,
-    pathname,
-    router,
-  ]);
+      throw new Error("Invalid response format from server");
+    },
+    enabled: !!(
+      showSecondary &&
+      currentSidebarConfig?.showTemplates &&
+      selectedBoard &&
+      selectedAcademicYear &&
+      user
+    ),
+  });
 
   const groupedTemplates = React.useMemo(() => {
     if (!templates.length) return {};
@@ -250,6 +214,17 @@ export function AppSidebar({
     });
     return filtered;
   }, [groupedTemplates, searchQuery]);
+
+  // Show loading state while authentication or settings are being loaded
+  if (authLoading || settingsLoading) {
+    return (
+      <Sidebar {...props}>
+        <div className="flex items-center justify-center h-screen">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar
@@ -349,7 +324,7 @@ export function AppSidebar({
                 </div>
               ) : error ? (
                 <div className="text-center py-8 text-destructive">
-                  <p>{error}</p>
+                  <p>{(error as Error).message}</p>
                 </div>
               ) : (
                 <>

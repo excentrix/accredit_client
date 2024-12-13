@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 export interface User {
   id: number;
   email: string;
@@ -43,7 +45,7 @@ export interface UserPermission extends Permission {
 }
 
 export interface Department {
-  id: number;
+  id: UUID;
   name: string;
   code: string;
 }

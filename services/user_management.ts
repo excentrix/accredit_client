@@ -1,6 +1,7 @@
 // services/user_management.ts
 import api from "./api";
 import { User, Role, Permission, Department } from "@/types/auth";
+import Cookies from "js-cookie";
 
 const userManagementService = {
   // Authentication Endpoints
@@ -17,7 +18,7 @@ const userManagementService = {
   },
 
   logout: async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = Cookies.get("refreshToken");
     const response = await api.post("/user/logout/", {
       refresh_token: refreshToken,
     });
@@ -92,14 +93,16 @@ const userManagementService = {
   },
 
   assignRole: async (userId: number, roleId: number) => {
-    const response = await api.post(`/user/users/${userId}/roles/`, {
+    const response = await api.post(`/user/users/${userId}/assign-role/`, {
       role_id: roleId,
     });
     return response.data;
   },
 
   revokeRole: async (userId: number, roleId: number) => {
-    await api.delete(`/user/users/${userId}/roles/${roleId}/`);
+    await api.post(`/user/users/${userId}/revoke-role/`, {
+      role_id: roleId,
+    });
   },
 
   // Role Permissions Management
@@ -199,9 +202,9 @@ const userManagementService = {
     return response.data.results;
   },
 
-  assignUserToDepartment: async (userId: number, departmentId: number) => {
+  assignUserToDepartment: async (userId: number, departmentId: string) => {
     const response = await api.put(`/user/users/${userId}/department/`, {
-      department_id: departmentId,
+      department_code: departmentId,
     });
     return response.data;
   },

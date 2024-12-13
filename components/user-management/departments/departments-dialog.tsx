@@ -31,8 +31,8 @@ export function DepartmentDialog({
   open,
   onOpenChange,
 }: DepartmentDialogProps) {
-  const [selectedDepartment, setSelectedDepartment] = useState<number | null>(
-    user.department?.id || null
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
+    user.department?.code || null
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,9 +93,7 @@ export function DepartmentDialog({
           <ScrollArea className="h-72 rounded-md border p-4">
             <RadioGroup
               value={selectedDepartment?.toString()}
-              onValueChange={(value) =>
-                setSelectedDepartment(value ? parseInt(value) : null)
-              }
+              onValueChange={(value) => setSelectedDepartment(value)}
             >
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
@@ -105,9 +103,9 @@ export function DepartmentDialog({
                 {filteredDepartments.map((dept) => (
                   <div key={dept.id} className="flex items-center space-x-2">
                     <RadioGroupItem
-                      value={dept.id.toString()}
+                      value={dept.code.toString()}
                       id={`dept-${dept.id}`}
-                      checked={selectedDepartment == dept.id}
+                      checked={selectedDepartment === dept.code}
                     />
                     <Label htmlFor={`dept-${dept.id}`}>
                       <div>{dept.name}</div>
