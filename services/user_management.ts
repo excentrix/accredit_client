@@ -3,6 +3,7 @@ import api from "./api";
 import { User, Role, Permission, Department } from "@/types/auth";
 import Cookies from "js-cookie";
 
+
 const userManagementService = {
   // Authentication Endpoints
   login: async (email: string, password: string) => {
@@ -40,7 +41,7 @@ const userManagementService = {
     email: string;
     username: string;
     password: string;
-    department_id?: number;
+    department_id?: string;
     role_ids?: number[];
     is_active?: boolean;
   }) => {

@@ -1,5 +1,4 @@
 // core.ts
-
 import api from "./api";
 
 export const academicYearServices = {
@@ -200,7 +199,7 @@ export const dashboardServices = {
 
   // Fetch faculty-specific dashboard stats
   fetchFacultyStats: (params?: {
-    department_id?: number;
+    department_id?: string;
     academic_year?: number;
     board_id?: number;
   }) =>
@@ -212,7 +211,7 @@ export const dashboardServices = {
   fetchActivityTimeline: (params?: {
     board_id?: number;
     academic_year?: number;
-    department_id?: number;
+    department_id?: string;
     days?: number;
   }) =>
     api
@@ -232,7 +231,7 @@ export const dashboardServices = {
   fetchRecentActivity: (params?: {
     board_id?: number;
     academic_year?: number;
-    department_id?: number;
+    department_id?: string;
     limit?: number;
   }) =>
     api

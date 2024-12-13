@@ -34,13 +34,14 @@ const userFormSchema = z
       .min(3, "Username must be at least 3 characters")
       .max(50, "Username must not exceed 50 characters"),
     email: z.string().email("Invalid email address"),
-    usn: z.string(),
-    // .min(3, "USN must be at least 3 characters")
-    // .max(20, "USN must not exceed 20 characters"),
+    usn: z
+      .string()
+      .min(3, "USN must be at least 3 characters")
+      .max(20, "USN must not exceed 20 characters"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
-      // .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
     confirm_password: z.string(),
@@ -62,7 +63,6 @@ type UserFormData = z.infer<typeof userFormSchema>;
 interface UserFormProps {
   userId?: string;
   onSuccess?: () => void;
-  
 }
 
 export function UserForm({ userId, onSuccess }: UserFormProps) {
