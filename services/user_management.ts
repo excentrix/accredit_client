@@ -83,7 +83,7 @@ const userManagementService = {
     return response.data;
   },
 
-  updateRole: async (roleId: number, roleData: Partial<Role>) => {
+  updateRole: async (roleId: string, roleData: Partial<Role>) => {
     const response = await api.put(`/user/roles/${roleId}/`, roleData);
     return response.data;
   },
