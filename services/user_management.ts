@@ -69,7 +69,7 @@ const userManagementService = {
     return response.data.results;
   },
 
-  fetchRole: async (roleId: number) => {
+  fetchRole: async (roleId: string) => {
     const response = await api.get(`/user/roles/${roleId}/`);
     return response.data;
   },
@@ -88,24 +88,24 @@ const userManagementService = {
     return response.data;
   },
 
-  deleteRole: async (roleId: number) => {
+  deleteRole: async (roleId: string) => {
     await api.delete(`/user/roles/${roleId}/`);
   },
 
   // Role Users Management
-  fetchRoleUsers: async (roleId: number) => {
+  fetchRoleUsers: async (roleId: string) => {
     const response = await api.get(`/user/roles/${roleId}/users/`);
     return response.data.results;
   },
 
-  assignRole: async (userId: number, roleId: number) => {
+  assignRole: async (userId: number, roleId: string) => {
     const response = await api.post(`/user/users/${userId}/assign-role/`, {
       role_id: roleId,
     });
     return response.data;
   },
 
-  revokeRole: async (userId: number, roleId: number) => {
+  revokeRole: async (userId: number, roleId: string) => {
     await api.post(`/user/users/${userId}/revoke-role/`, {
       role_id: roleId,
     });

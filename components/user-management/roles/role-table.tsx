@@ -71,7 +71,7 @@ export function RoleTable() {
       role.name.toLowerCase().includes(searchQuery.toLowerCase())
     ) ?? [];
 
-  const handleDeleteRole = async (roleId: number) => {
+  const handleDeleteRole = async (roleId: string) => {
     try {
       await userManagementService.deleteRole(roleId);
       queryClient.invalidateQueries({ queryKey: ["roles"] });

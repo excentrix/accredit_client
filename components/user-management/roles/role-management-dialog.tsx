@@ -29,13 +29,13 @@ export function RoleManagementDialog({
   open,
   onOpenChange,
 }: RoleManagementDialogProps) {
-  const [selectedRoles, setSelectedRoles] = useState<number[]>(
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(
     user.roles?.map((role) => role.id) || []
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  const handleRoleToggle = (roleId: number) => {
+  const handleRoleToggle = (roleId: string) => {
     setSelectedRoles((prev) =>
       prev.includes(roleId)
         ? prev.filter((id) => id !== roleId)
