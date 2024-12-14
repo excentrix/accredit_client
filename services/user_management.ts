@@ -1,8 +1,7 @@
 // services/user_management.ts
 import api from "./api";
-import { User, Role, Permission, Department, UserUpdateData } from "@/types/auth";
+import { Role, Department, UserUpdateData } from "@/types/auth";
 import Cookies from "js-cookie";
-
 
 const userManagementService = {
   // Authentication Endpoints
@@ -38,14 +37,20 @@ const userManagementService = {
   },
 
   createUser: async (userData: {
-    email: string;
     username: string;
-    password: string;
-    department_id?: string;
-    role_ids?: number[];
-    is_active?: boolean;
+    email: string;
+    usn: string;
+    first_name?: string;
+    last_name?: string;
+    department_id: string;
+    role_ids: number[];
+    is_active: boolean;
+    password?: string;
+    confirm_password?: string;
   }) => {
-    const response = await api.post("/user/users/", userData);
+    console.log(userData);
+    const response = await api.post("/user/register/", userData);
+
     return response.data;
   },
 

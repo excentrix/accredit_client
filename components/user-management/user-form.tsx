@@ -60,37 +60,49 @@ export interface UserApiData {
   role_ids: number[];
   is_active: boolean;
   password?: string;
+  confirm_password?: string;
 }
 
-const userFormSchema = z
-  .object({
-    username: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .max(50, "Username must not exceed 50 characters"),
-    email: z.string().email("Invalid email address"),
-    usn: z.string(),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    confirm_password: z.string(),
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-    department_id: z.string({
-      required_error: "Please select a department",
-    }),
-    roles: z.array(z.string()).min(1, "Please select at least one role"),
-    is_active: z.boolean().default(true),
-  })
-  .refine((data) => data.password === data.confirm_password, {
+const baseUserSchema = z.object({
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(50, "Username must not exceed 50 characters"),
+  email: z.string().email("Invalid email address"),
+  usn: z.string(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  department_id: z.string({
+    required_error: "Please select a department",
+  }),
+  roles: z.array(z.string()).min(1, "Please select at least one role"),
+  is_active: z.boolean().default(true),
+});
+
+const passwordSchema = z.object({
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  confirm_password: z.string(),
+});
+
+const createUserFormSchema = baseUserSchema.merge(passwordSchema).refine(
+  (data) => {
+    if (data.password !== data.confirm_password) {
+      return false;
+    }
+    return true;
+  },
+  {
     message: "Passwords don't match",
     path: ["confirm_password"],
-  });
+  }
+);
 
-type UserFormData = z.infer<typeof userFormSchema>;
+const updateUserFormSchema = baseUserSchema;
 
 interface UserFormProps {
   userId?: string;
@@ -101,15 +113,22 @@ export function UserForm({ userId, onSuccess }: UserFormProps) {
   const queryClient = useQueryClient();
   const isEditMode = !!userId;
 
-  // Form initialization
-  const form = useForm<UserFormData>({
-    resolver: zodResolver(userFormSchema),
+  // Use different schemas based on mode
+  const userFormSchema = isEditMode
+    ? baseUserSchema
+    : baseUserSchema.merge(passwordSchema);
+
+  // Form initialization with the correct type
+  const form = useForm<CreateUserFormData | UpdateUserFormData>({
+    resolver: zodResolver(
+      isEditMode ? updateUserFormSchema : createUserFormSchema
+    ),
     defaultValues: {
       is_active: true,
       roles: [],
+      ...(isEditMode ? {} : { password: "", confirm_password: "" }),
     },
   });
-
   // Queries
   const { data: rolesData, isLoading: isLoadingRoles } = useQuery({
     queryKey: ["roles"],
@@ -139,11 +158,9 @@ export function UserForm({ userId, onSuccess }: UserFormProps) {
           })
           .filter((id): id is number => id !== undefined),
         password: data.password,
+        confirm_password: data.confirm_password,
       };
-      return userManagementService.createUser({
-        ...apiData,
-        password: apiData.password || "",
-      });
+      return userManagementService.createUser(apiData);
     },
     onSuccess: () => {
       showToast.success("User created successfully");
@@ -166,6 +183,13 @@ export function UserForm({ userId, onSuccess }: UserFormProps) {
           })
           .filter((id): id is number => id !== undefined),
       };
+
+      // Only include password fields if they are provided
+      if (data.password && data.confirm_password) {
+        apiData.password = data.password;
+        apiData.confirm_password = data.confirm_password;
+      }
+
       return userManagementService.updateUser(Number(userId), apiData);
     },
     onSuccess: () => {
@@ -192,11 +216,11 @@ export function UserForm({ userId, onSuccess }: UserFormProps) {
   }, [userData, form, isEditMode]);
 
   // Handle form submission
-  const onSubmit = (data: UserFormData) => {
+  const onSubmit = (data: CreateUserFormData | UpdateUserFormData) => {
     if (isEditMode) {
-      updateUserMutation.mutate(data);
+      updateUserMutation.mutate(data as UpdateUserFormData);
     } else {
-      createUserMutation.mutate(data);
+      createUserMutation.mutate(data as CreateUserFormData);
     }
   };
 
