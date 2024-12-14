@@ -112,7 +112,7 @@ const userManagementService = {
   },
 
   // Role Permissions Management
-  updateRolePermissions: async (roleId: number, permissionIds: number[]) => {
+  updateRolePermissions: async (roleId: string, permissionIds: string[]) => {
     const response = await api.put(`/user/roles/${roleId}/permissions/`, {
       permission_ids: permissionIds,
     });

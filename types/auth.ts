@@ -14,7 +14,7 @@ export interface User {
 }
 
 export interface Role {
-  id: number;
+  id: string;
   name: string;
   description?: string;
   permissions: Permission[];
@@ -25,7 +25,7 @@ export interface Module {
   description?: string;
 }
 export interface Permission {
-  id: number;
+  id: string;
   module: Module;
   module_name: string;
   resource: string;

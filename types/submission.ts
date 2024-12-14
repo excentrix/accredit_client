@@ -10,4 +10,6 @@ export interface SubmissionState {
     email: string;
   } | null;
   rejection_reason?: string;
+  is_empty: boolean;
+  empty_reason?: string;
 }

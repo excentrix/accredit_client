@@ -11,11 +11,16 @@ import { SubmissionState } from "@/types/submission";
 import { showToast } from "@/lib/toast";
 import { templateServices, templateSubmissionServices } from "@/services/core";
 
+export interface SubmitOptions {
+  is_empty?: boolean;
+  empty_reason?: string;
+}
+
 interface SubmissionContextType {
   submissionState: SubmissionState | null;
   isSubmitting: boolean;
   isLoading: boolean;
-  submitTemplate: () => Promise<void>;
+  submitTemplate: (options?: SubmitOptions) => Promise<void>;
   withdrawSubmission: () => Promise<void>;
   refreshSubmissionState: () => Promise<void>;
   hasUnsavedChanges: boolean;
@@ -133,7 +138,7 @@ export function SubmissionProvider({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const submitTemplate = async () => {
+  const submitTemplate = async (options: SubmitOptions = {}) => {
     if (hasUnsavedChanges) {
       showToast.error("Please save all changes before submitting");
       return;
@@ -153,7 +158,11 @@ export function SubmissionProvider({
 
     try {
       const response = await templateSubmissionServices.submitTemplate(
-        templateCode
+        templateCode,
+        {
+          is_empty: options.is_empty || false,
+          empty_reason: options.empty_reason || "",
+        }
       );
       if (response.status === "success") {
         showToast.dismiss(loadingToast);

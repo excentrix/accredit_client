@@ -1,4 +1,5 @@
 // core.ts
+import { SubmitOptions } from "@/context/submission-context";
 import api from "./api";
 
 export const academicYearServices = {
@@ -64,8 +65,8 @@ export const templateServices = {
 };
 
 export const templateSubmissionServices = {
-  submitTemplate: (code: string) =>
-    api.post(`/api/templates/${code}/submit/`).then((res) => res.data),
+  submitTemplate: (code: string, options: SubmitOptions) =>
+    api.post(`/api/templates/${code}/submit/`, options).then((res) => res.data),
 
   withdrawSubmission: (code: string) =>
     api.post(`/api/templates/${code}/withdraw/`).then((res) => res.data),

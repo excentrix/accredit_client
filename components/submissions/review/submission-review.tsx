@@ -29,6 +29,7 @@ import {
   User,
   Clock,
   ArrowLeft,
+  Info,
 } from "lucide-react";
 import {
   Dialog,
@@ -50,6 +51,20 @@ import { submissionStatsServices } from "@/services/core";
 
 interface SubmissionReviewProps {
   submissionId: string;
+}
+
+function EmptySubmissionBanner({ reason }: { reason: string }) {
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+      <div className="flex items-center">
+        <Info className="h-5 w-5 text-blue-500 mr-2" />
+        <div>
+          <h4 className="font-medium text-blue-700">Empty Submission</h4>
+          <p className="text-sm text-blue-600">Reason: {reason}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
@@ -179,6 +194,11 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
         Back to Submissions
       </Button>
 
+      {/* Empty Submission Banner */}
+      {submission.is_empty && (
+        <EmptySubmissionBanner reason={submission.empty_reason} />
+      )}
+
       {/* Status Banner */}
       <div
         className={`p-4 rounded-lg border ${getStatusColor(submission.status)}`}
@@ -231,11 +251,55 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="section-0" className="space-y-4">
-                <TabsList className="w-full flex-wrap h-auto gap-2 p-2">
+              {submission.is_empty ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg bg-muted/5">
+                  <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    Empty Submission
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-md">
+                    This is an empty submission. The department has indicated
+                    they have no data to submit for this template.
+                  </p>
+                  <p className="text-sm font-medium mt-4">
+                    Reason: {submission.empty_reason}
+                  </p>
+                </div>
+              ) : (
+                // Your existing Tabs content for data display
+                <Tabs defaultValue="section-0" className="space-y-4">
+                  <TabsList className="w-full flex-wrap h-auto gap-2 p-2">
+                    {Array.from(
+                      new Set(
+                        submission.data_rows.map(
+                          (row: any) => row.section_index
+                        )
+                      )
+                    ).map((sectionIndex) => {
+                      const sectionData = submission.data_rows.filter(
+                        (row: any) => row.section_index === sectionIndex
+                      );
+
+                      return (
+                        <TabsTrigger
+                          key={String(sectionIndex)}
+                          value={`section-${sectionIndex}`}
+                          className="flex items-center gap-2"
+                        >
+                          <span>Section {(sectionIndex as number) + 1}</span>
+                          <Badge variant="secondary" className="ml-2">
+                            {sectionData.length} entries
+                          </Badge>
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+
                   {Array.from(
                     new Set(
-                      submission.data_rows.map((row: any) => row.section_index)
+                      submission?.data_rows?.map(
+                        (row: any) => row.section_index
+                      )
                     )
                   ).map((sectionIndex) => {
                     const sectionData = submission.data_rows.filter(
@@ -243,119 +307,96 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
                     );
 
                     return (
-                      <TabsTrigger
+                      <TabsContent
                         key={String(sectionIndex)}
                         value={`section-${sectionIndex}`}
-                        className="flex items-center gap-2"
                       >
-                        <span>Section {(sectionIndex as number) + 1}</span>
-                        <Badge variant="secondary" className="ml-2">
-                          {sectionData.length} entries
-                        </Badge>
-                      </TabsTrigger>
-                    );
-                  })}
-                </TabsList>
+                        <div className="space-y-4">
+                          {/* Section Header */}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-semibold">
+                                Section {(sectionIndex as number) + 1} Data
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Showing {sectionData.length} entries
+                              </p>
+                            </div>
 
-                {Array.from(
-                  new Set(
-                    submission?.data_rows?.map((row: any) => row.section_index)
-                  )
-                ).map((sectionIndex) => {
-                  const sectionData = submission.data_rows.filter(
-                    (row: any) => row.section_index === sectionIndex
-                  );
-
-                  return (
-                    <TabsContent
-                      key={String(sectionIndex)}
-                      value={`section-${sectionIndex}`}
-                    >
-                      <div className="space-y-4">
-                        {/* Section Header */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold">
-                              Section {(sectionIndex as number) + 1} Data
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Showing {sectionData.length} entries
-                            </p>
+                            {sectionData.length > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  // Handle section data download
+                                  const csv = generateCSV(sectionData);
+                                  downloadCSV(
+                                    csv,
+                                    `${submission.template_code}_section${
+                                      (sectionIndex as number) + 1
+                                    }.csv`
+                                  );
+                                }}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Download Section Data
+                              </Button>
+                            )}
                           </div>
 
-                          {sectionData.length > 0 && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                // Handle section data download
-                                const csv = generateCSV(sectionData);
-                                downloadCSV(
-                                  csv,
-                                  `${submission.template_code}_section${
-                                    (sectionIndex as number) + 1
-                                  }.csv`
-                                );
-                              }}
-                            >
-                              <Download className="mr-2 h-4 w-4" />
-                              Download Section Data
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* Section Data Table */}
-                        {sectionData && sectionData.length > 0 ? (
-                          <div className="border rounded-lg">
-                            <Table>
-                              <TableHeader>
-                                <TableRow className="bg-muted/50">
-                                  {Object.keys(sectionData[0].data).map(
-                                    (header) => (
-                                      <TableHead
-                                        key={header}
-                                        className="whitespace-pre-wrap"
-                                      >
-                                        {header}
-                                      </TableHead>
-                                    )
-                                  )}
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {sectionData.map((row: any) => (
-                                  <TableRow key={row.row_number}>
-                                    {Object.values(row.data).map(
-                                      (value, index) => (
-                                        <TableCell
-                                          key={index}
+                          {/* Section Data Table */}
+                          {sectionData && sectionData.length > 0 ? (
+                            <div className="border rounded-lg">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow className="bg-muted/50">
+                                    {Object.keys(sectionData[0].data).map(
+                                      (header) => (
+                                        <TableHead
+                                          key={header}
                                           className="whitespace-pre-wrap"
                                         >
-                                          {String(value) ?? "—"}
-                                        </TableCell>
+                                          {header}
+                                        </TableHead>
                                       )
                                     )}
                                   </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg bg-muted/5">
-                            <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                            <h3 className="text-lg font-semibold mb-2">
-                              No Data Available
-                            </h3>
-                            <p className="text-muted-foreground text-sm">
-                              This section does not contain any data yet.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-                  );
-                })}
-              </Tabs>
+                                </TableHeader>
+                                <TableBody>
+                                  {sectionData.map((row: any) => (
+                                    <TableRow key={row.row_number}>
+                                      {Object.values(row.data).map(
+                                        (value, index) => (
+                                          <TableCell
+                                            key={index}
+                                            className="whitespace-pre-wrap"
+                                          >
+                                            {String(value) ?? "—"}
+                                          </TableCell>
+                                        )
+                                      )}
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg bg-muted/5">
+                              <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">
+                                No Data Available
+                              </h3>
+                              <p className="text-muted-foreground text-sm">
+                                This section does not contain any data yet.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    );
+                  })}
+                </Tabs>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -472,28 +513,30 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsViewDataDialogOpen(true)}
-            >
-              <Eye className="mr-2 h-4 w-4" />
-              View Full Data
-            </Button>
-            {/* {submission.data_rows && submission.data_rows.length > 0 && ( */}
-            <Button
-              variant="outline"
-              onClick={() => {
-                const csv = generateCSV(submission);
-                downloadCSV(
-                  csv,
-                  `${submission.template_code}_${submission.academic_year_name}.csv`
-                );
-              }}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download Data
-            </Button>
-            {/* )} */}
+            {!submission.is_empty && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewDataDialogOpen(true)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Full Data
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const csv = generateCSV(submission);
+                    downloadCSV(
+                      csv,
+                      `${submission.template_code}_${submission.academic_year_name}.csv`
+                    );
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Data
+                </Button>
+              </>
+            )}
             <div className="flex-1" />
             <Button
               variant="destructive"
@@ -571,7 +614,16 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[80vh] overflow-y-auto">
-            {submission.data_rows && submission.data_rows.length > 0 ? (
+            {submission.is_empty ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Empty Submission</h3>
+                <p className="text-muted-foreground text-sm">
+                  This is an empty submission with reason:{" "}
+                  {submission.empty_reason}
+                </p>
+              </div>
+            ) : submission.data_rows && submission.data_rows.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>

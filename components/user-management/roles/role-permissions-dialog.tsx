@@ -48,7 +48,7 @@ export function RolePermissionsDialog({
   onOpenChange,
 }: RolePermissionsDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const queryClient = useQueryClient();
   const {
     data: permissions = [],
@@ -74,7 +74,7 @@ export function RolePermissionsDialog({
     )
   );
 
-  const handlePermissionToggle = (permissionId: number) => {
+  const handlePermissionToggle = (permissionId: string) => {
     setSelectedPermissions((prev) =>
       prev.includes(permissionId)
         ? prev.filter((id) => id !== permissionId)

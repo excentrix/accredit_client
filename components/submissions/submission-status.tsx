@@ -12,6 +12,17 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 export function SubmissionStatus() {
   const {
@@ -22,7 +33,13 @@ export function SubmissionStatus() {
     withdrawSubmission,
   } = useSubmission();
 
-  console.log(submissionState);
+  const [showEmptyDialog, setShowEmptyDialog] = useState(false);
+  const [emptyReason, setEmptyReason] = useState("");
+  const [isSubmittingEmpty, setIsSubmittingEmpty] = useState(false);
+
+  const handleSubmitEmpty = () => {
+    setShowEmptyDialog(true);
+  };
 
   if (isLoading) {
     return (
@@ -60,6 +77,36 @@ export function SubmissionStatus() {
     }
   };
 
+  const handleEmptySubmission = async () => {
+    if (!emptyReason.trim()) return;
+
+    try {
+      await submitTemplate({
+        is_empty: true,
+        empty_reason: emptyReason.trim(),
+      });
+      setShowEmptyDialog(false);
+      setEmptyReason("");
+    } catch (error) {
+      console.error("Error submitting empty template:", error);
+    } finally {
+      setIsSubmittingEmpty(false);
+    }
+  };
+
+  const handleRegularSubmission = async () => {
+    try {
+      await submitTemplate({ is_empty: false });
+    } catch (error: any) {
+      console.log("Error submitting template:", error);
+      if (error.response?.data?.code === "NO_DATA") {
+        setShowEmptyDialog(true);
+      } else {
+        console.error("Error submitting template:", error);
+      }
+    }
+  };
+
   const getStatusContent = () => {
     switch (submissionState.status) {
       case "draft":
@@ -69,6 +116,15 @@ export function SubmissionStatus() {
           description: (
             <div className="space-y-2">
               <p>Your submission is currently in draft mode.</p>
+              {submissionState.is_empty && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Empty Submission</AlertTitle>
+                  <AlertDescription>
+                    Reason: {submissionState.empty_reason}
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <p>Submission Status:</p>
                 <div className="grid grid-cols-1 gap-2">
@@ -89,8 +145,10 @@ export function SubmissionStatus() {
             </div>
           ),
           alertVariant: "default" as const,
-          buttonText: "Submit for Review",
-          buttonAction: submitTemplate,
+          buttons: {
+            buttonText: ["Submit Empty", "Submit for Review"],
+            buttonAction: [handleSubmitEmpty, handleRegularSubmission],
+          },
         };
 
       case "submitted":
@@ -102,6 +160,15 @@ export function SubmissionStatus() {
               <p>
                 Your submission is currently under review by the IQAC Director.
               </p>
+              {submissionState.is_empty && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Empty Submission</AlertTitle>
+                  <AlertDescription>
+                    Reason: {submissionState.empty_reason}
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="mt-4 space-y-2 text-sm">
                 <p className="text-muted-foreground">Submission Timeline:</p>
                 <div className="grid grid-cols-1 gap-2">
@@ -150,6 +217,15 @@ export function SubmissionStatus() {
               <p className="font-medium text-green-600">
                 Your submission has been approved by the IQAC Director.
               </p>
+              {submissionState.is_empty && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Empty Submission</AlertTitle>
+                  <AlertDescription>
+                    Reason: {submissionState.empty_reason}
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="mt-4 space-y-2 text-sm">
                 <p className="text-muted-foreground">Approval Timeline:</p>
                 <div className="grid grid-cols-1 gap-2">
@@ -206,6 +282,16 @@ export function SubmissionStatus() {
                 </p>
               </div>
 
+              {submissionState.is_empty && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Empty Submission</AlertTitle>
+                  <AlertDescription>
+                    Reason: {submissionState.empty_reason}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2 text-sm">
                 <p className="text-muted-foreground">Submission Timeline:</p>
                 <div className="grid grid-cols-1 gap-2">
@@ -251,7 +337,7 @@ export function SubmissionStatus() {
           ),
           alertVariant: "destructive" as const,
           buttonText: "Submit Revised Version",
-          buttonAction: submitTemplate,
+          buttonAction: handleRegularSubmission,
         };
 
       default:
@@ -263,37 +349,111 @@ export function SubmissionStatus() {
   if (!statusContent) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          {statusContent.icon}
-          <CardTitle>{statusContent.title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Alert variant={statusContent.alertVariant}>
-          <AlertDescription>{statusContent.description}</AlertDescription>
-        </Alert>
-
-        {statusContent.buttonText && statusContent.buttonAction && (
-          <div className="flex justify-end">
-            <Button
-              variant={statusContent.buttonVariant || "default"}
-              onClick={statusContent.buttonAction}
-              disabled={isSubmitting}
-              className={cn(
-                submissionState?.status === "rejected" &&
-                  "bg-blue-600 hover:bg-blue-700"
-              )}
-            >
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {statusContent.buttonText}
-            </Button>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            {statusContent.icon}
+            <CardTitle>{statusContent.title}</CardTitle>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert variant={statusContent.alertVariant}>
+            <AlertDescription>{statusContent.description}</AlertDescription>
+          </Alert>
+
+          {statusContent.buttons && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {statusContent.buttons.buttonText.map((text, index) => (
+                <Button
+                  key={text}
+                  onClick={statusContent.buttons.buttonAction[index]}
+                  disabled={isSubmitting}
+                  className={cn(
+                    submissionState?.status === "rejected" &&
+                      "bg-blue-600 hover:bg-blue-700"
+                  )}
+                >
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {text}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {statusContent.buttonText && statusContent.buttonAction && (
+            <div className="flex justify-end">
+              <Button
+                variant={statusContent.buttonVariant || "default"}
+                onClick={statusContent.buttonAction}
+                disabled={isSubmitting}
+                className={cn(
+                  submissionState?.status === "rejected" &&
+                    "bg-blue-600 hover:bg-blue-700"
+                )}
+              >
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {statusContent.buttonText}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={showEmptyDialog} onOpenChange={setShowEmptyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Empty Submission</DialogTitle>
+            <DialogDescription>
+              If you have no data to submit for this template, please provide a
+              reason.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="empty-reason">Reason for empty submission</Label>
+              <Textarea
+                id="empty-reason"
+                value={emptyReason}
+                onChange={(e) => setEmptyReason(e.target.value)}
+                placeholder="Example: No relevant data available for this period"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-start">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEmptyDialog(false);
+                  setEmptyReason("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleRegularSubmission} disabled={isSubmitting}>
+                Submit with Data
+              </Button>
+              <Button
+                onClick={handleEmptySubmission}
+                disabled={isSubmittingEmpty || !emptyReason.trim()}
+                variant="secondary"
+              >
+                {isSubmittingEmpty && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Submit Empty
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
