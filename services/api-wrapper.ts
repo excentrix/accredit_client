@@ -18,11 +18,13 @@ export const needsSettings = (url: string) => {
   const excludedPaths = [
     "/user/token",
     "/user/token/refresh",
+    "user/reset-password-request",
     "/user/logout",
     "/user/users/me",
     "/api/boards",
     "/api/academic-years",
     "/api/templates/export/",
+
     // "/api/submissions/current_academic_year/",
     // Add other paths that don't need settings
   ];

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const { login, isLoading, error, isAuthenticated, user } = useAuth();
@@ -49,7 +50,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center font-bold">
-            NAAC Data Management
+            Accredit Login
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -94,6 +95,14 @@ export default function LoginPage() {
                 "Sign in"
               )}
             </Button>
+            <div className="text-sm text-center">
+              <Link
+                href="/reset-password/request"
+                className="text-primary hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

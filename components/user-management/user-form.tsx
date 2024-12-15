@@ -33,7 +33,7 @@ interface BaseUserFormData {
   usn: string;
   first_name?: string;
   last_name?: string;
-  department_id: string;
+  department_id?: string;
   roles: string[]; // Role names for form
   is_active: boolean;
 }
@@ -56,7 +56,7 @@ export interface UserApiData {
   usn: string;
   first_name?: string;
   last_name?: string;
-  department_id: string;
+  department_id?: string;
   role_ids: number[];
   is_active: boolean;
   password?: string;
@@ -72,9 +72,11 @@ const baseUserSchema = z.object({
   usn: z.string(),
   first_name: z.string().optional(),
   last_name: z.string().optional(),
-  department_id: z.string({
-    required_error: "Please select a department",
-  }),
+  department_id: z
+    .string({
+      required_error: "Please select a department",
+    })
+    .optional(),
   roles: z.array(z.string()).min(1, "Please select at least one role"),
   is_active: z.boolean().default(true),
 });

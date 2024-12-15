@@ -17,6 +17,7 @@ import {
   Shield,
   Building,
   Key,
+  RectangleEllipsis,
 } from "lucide-react";
 import { User, Role, Department } from "@/types/auth";
 import { cn } from "@/lib/utils";
@@ -113,6 +114,15 @@ export function UserTable() {
       display_name: "Department",
       render: (user: User) => user.department?.name || "-",
     },
+    // {
+    //   name: 'password',
+    //   display_name: 'Password',
+    //   render: (user: User) => (
+    //     <Button >
+    //       Reset
+    //     </Button>
+    //   )
+    // },
     {
       name: "status",
       display_name: "Status",
@@ -133,6 +143,15 @@ export function UserTable() {
       );
     } catch (error) {
       showToast.error("Failed to update user status");
+    }
+  };
+
+  const handleResetPassword = async (email: string) => {
+    try {
+      await userManagementService.resetPasswordRequest(email);
+      showToast.success("Password reset email sent successfully");
+    } catch (error) {
+      showToast.error("Failed to send password reset email");
     }
   };
 
@@ -175,6 +194,14 @@ export function UserTable() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleResetPassword(user.email)}
+                      >
+                        <RectangleEllipsis className="mr-2 h-4 w-4" />
+                        Reset Password
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => {
                           setSelectedUser(user);

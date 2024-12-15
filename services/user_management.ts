@@ -42,7 +42,7 @@ const userManagementService = {
     usn: string;
     first_name?: string;
     last_name?: string;
-    department_id: string;
+    department_id?: string;
     role_ids: number[];
     is_active: boolean;
     password?: string;
