@@ -155,7 +155,7 @@ const userManagementService = {
     return response.data || [];
   },
 
-  assignPermissionToUser: async (userId: number, permissionId: number) => {
+  assignPermissionToUser: async (userId: number, permissionId: string) => {
     const response = await api.post(
       `/user/users/${userId}/assign_permission/`,
       {
@@ -165,7 +165,7 @@ const userManagementService = {
     return response.data;
   },
 
-  revokePermissionFromUser: async (userId: number, permissionId: number) => {
+  revokePermissionFromUser: async (userId: number, permissionId: string) => {
     const response = await api.delete(
       `/user/users/${userId}/permissions/${permissionId}/`
     );

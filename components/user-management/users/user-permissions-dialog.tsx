@@ -63,7 +63,7 @@ export function UserPermissionsDialog({
   onOpenChange,
 }: UserPermissionsDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("all");
 
   const queryClient = useQueryClient();
@@ -155,19 +155,19 @@ export function UserPermissionsDialog({
         .map((permission: Permission) => permission.id);
 
       const permissionsToAdd = selectedPermissions.filter(
-        (permissionId: number) =>
+        (permissionId: string) =>
           !directPermissions.find((p: Permission) => p.id === permissionId)
       );
 
       await Promise.all(
-        permissionsToRemove.map((permissionId: number) =>
+        permissionsToRemove.map((permissionId: string) =>
           userManagementService.revokePermissionFromUser(user.id, permissionId)
         )
       );
 
       // Process removals
       await Promise.all(
-        permissionsToRemove.map((permissionId: number) =>
+        permissionsToRemove.map((permissionId: string) =>
           userManagementService.revokePermissionFromUser(user.id, permissionId)
         )
       );
