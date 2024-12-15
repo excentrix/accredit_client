@@ -16,12 +16,6 @@ export interface ActivityTimelineData {
   rejections: number;
 }
 
-export interface CriteriaCompletion {
-  criterion: string;
-  completed: number;
-  total: number;
-  percentage: number;
-}
 
 export interface RecentActivity {
   id: number;
@@ -40,4 +34,43 @@ export interface FacultyStats {
   rejected_submissions: number;
   department_progress: number;
   recent_activity: RecentActivity[];
+}
+
+// types/dashboard.ts
+export interface DashboardActivity {
+  id: number;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  department?: {
+    id: number;
+    name: string;
+    code: string;
+  };
+  template: {
+    id: number;
+    code: string;
+    name: string;
+    criterion: string;
+  };
+  action: string;
+  action_display: string;
+  timestamp: string;
+}
+
+export interface TimelineData {
+  date: string;
+  submissions: number;
+  approvals: number;
+  rejections: number;
+}
+
+export interface CriteriaCompletion {
+  criterion_number: string;
+  criterion_name: string;
+  completed: number;
+  total: number;
+  percentage: number;
 }

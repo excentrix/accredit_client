@@ -369,6 +369,7 @@ export function SubmissionStatus() {
                   key={text}
                   onClick={statusContent.buttons.buttonAction[index]}
                   disabled={isSubmitting}
+                  variant={text === "Submit Empty" ? "outline" : "default"}
                   className={cn(
                     submissionState?.status === "rejected" &&
                       "bg-blue-600 hover:bg-blue-700"

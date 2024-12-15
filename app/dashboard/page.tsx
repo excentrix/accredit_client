@@ -7,7 +7,7 @@ import { SubmissionStats } from "@/components/submissions/submission-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettings } from "@/context/settings-context";
-import { Activity } from "lucide-react";
+import { Activity, CheckCircle, Eye, Send, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -25,6 +25,9 @@ import {
 
 // You'll need to implement these services
 import { dashboardServices } from "@/services/core";
+import { Role } from "@/types/auth";
+import { DashboardActivity } from "@/services/dashboard";
+import { formatDistanceToNow } from "date-fns";
 
 const COLORS = [
   "#0088FE", // Blue
@@ -48,11 +51,11 @@ export default function DashboardPage() {
     queryKey: ["activity-timeline", selectedBoard, selectedAcademicYear],
     queryFn: () =>
       dashboardServices.fetchActivityTimeline({
-        board_id: selectedBoard,
-        academic_year: selectedAcademicYear,
+        // board_id: selectedBoard,
+        // academic_year: selectedAcademicYear,
         days: 30, // Last 30 days
       }),
-    enabled: user?.roles.some((role) =>
+    enabled: user?.roles.some((role: Role) =>
       ["admin", "iqac_director"].includes(role.name)
     ),
   });
@@ -62,10 +65,10 @@ export default function DashboardPage() {
     queryKey: ["criteria-completion", selectedBoard, selectedAcademicYear],
     queryFn: () =>
       dashboardServices.fetchCriteriaCompletion({
-        board_id: selectedBoard,
-        academic_year: selectedAcademicYear,
+        // board_id: selectedBoard,
+        // academic_year: selectedAcademicYear,
       }),
-    enabled: user?.roles.some((role) =>
+    enabled: user?.roles.some((role: Role) =>
       ["admin", "iqac_director"].includes(role.name)
     ),
   });
@@ -75,11 +78,10 @@ export default function DashboardPage() {
     queryKey: ["recent-activity", selectedBoard, selectedAcademicYear],
     queryFn: () =>
       dashboardServices.fetchRecentActivity({
-        board_id: selectedBoard,
-        academic_year: selectedAcademicYear,
         limit: 10,
+        department_id: user?.department?.id,
       }),
-    enabled: user?.roles.some((role) =>
+    enabled: user?.roles.some((role: Role) =>
       ["admin", "iqac_director"].includes(role.name)
     ),
   });
@@ -95,8 +97,6 @@ export default function DashboardPage() {
     queryFn: () =>
       dashboardServices.fetchRecentActivity({
         department_id: user?.department?.id,
-        academic_year: selectedAcademicYear,
-        board_id: selectedBoard,
         limit: 10,
       }),
     enabled:
@@ -196,26 +196,54 @@ export default function DashboardPage() {
     );
   };
 
-  const renderRecentActivity = (activities: any[] | undefined) => {
+  const ActivityIcon = ({ action }: { action: string }) => {
+    const iconMap = {
+      submitted: <Send className="h-4 w-4 text-blue-500" />,
+      approved: <CheckCircle className="h-4 w-4 text-green-500" />,
+      rejected: <XCircle className="h-4 w-4 text-red-500" />,
+      reviewed: <Eye className="h-4 w-4 text-yellow-500" />,
+    };
+
+    return (
+      iconMap[action as keyof typeof iconMap] || (
+        <Activity className="h-4 w-4" />
+      )
+    );
+  };
+
+  const renderRecentActivity = (
+    activities: DashboardActivity[] | undefined
+  ) => {
     if (!activities?.length) {
-      return <div className="text-center p-4">No recent activity</div>;
+      return (
+        <div className="text-center p-4 text-muted-foreground">
+          No recent activity to display
+        </div>
+      );
     }
 
-    return activities.map((activity, index) => (
+    return activities.map((activity) => (
       <div
-        key={index}
+        key={activity.id}
         className="flex items-center gap-4 border-b py-4 last:border-0"
       >
-        <Activity className="h-4 w-4" />
-        <div className="flex-1">
-          <p className="text-sm font-medium">{activity.action}</p>
-          <p className="text-sm text-muted-foreground">
-            {activity.department && `${activity.department} - `}
-            {activity.template}
+        <div className="flex-shrink-0">
+          <ActivityIcon activity={activity.action} />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">
+            {activity.user.name} {activity.action_display.toLowerCase()} a
+            submission
+          </p>
+          <p className="text-sm text-muted-foreground truncate">
+            {activity.template.name} (Criterion {activity.template.criterion})
+            {activity.department && ` - ${activity.department.name}`}
           </p>
         </div>
-        <time className="text-sm text-muted-foreground">
-          {new Date(activity.timestamp).toLocaleString()}
+
+        <time className="text-sm text-muted-foreground whitespace-nowrap">
+          {formatDistanceToNow(new Date(activity.timestamp))} ago
         </time>
       </div>
     ));
