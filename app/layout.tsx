@@ -31,6 +31,7 @@ export default function RootLayout({
           queries: {
             staleTime: 60 * 1000,
             refetchOnWindowFocus: false,
+            retry: 1,
           },
         },
       })

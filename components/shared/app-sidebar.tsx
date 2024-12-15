@@ -96,6 +96,12 @@ const mainNavItems: NavItem[] = [
     icon: ListChecks,
     roles: ["admin"],
   },
+  {
+    title: "Configuration",
+    path: "/config",
+    icon: Command,
+    roles: ["admin"],
+  },
 ];
 
 function hasRole(user: User, requiredRoles: string[]): boolean {
@@ -129,17 +135,12 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const {
     selectedBoard,
-    setSelectedBoard,
     selectedAcademicYear,
-    setSelectedAcademicYear,
-    boards,
-    academicYears,
     isLoading: settingsLoading,
   } = useSettings();
 
   const { user, isLoading: authLoading } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Check if current path should show secondary sidebar
@@ -189,11 +190,11 @@ export function AppSidebar({
     if (!templates.length) return {};
 
     return templates.reduce<Record<string, Template[]>>((acc, template) => {
-      const criteria = template.code.split(".").slice(0, 2).join(".");
-      if (!acc[criteria]) {
-        acc[criteria] = [];
+      const criteriaKey = template.criteria.toString();
+      if (!acc[criteriaKey]) {
+        acc[criteriaKey] = [];
       }
-      acc[criteria].push(template);
+      acc[criteriaKey].push(template);
       return acc;
     }, {});
   }, [templates]);
@@ -216,15 +217,15 @@ export function AppSidebar({
   }, [groupedTemplates, searchQuery]);
 
   // Show loading state while authentication or settings are being loaded
-  if (authLoading || settingsLoading) {
-    return (
-      <Sidebar {...props}>
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </Sidebar>
-    );
-  }
+  // if (authLoading || settingsLoading) {
+  //   return (
+  //     <Sidebar {...props}>
+  //       <div className="flex items-center justify-center h-screen">
+  //         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  //       </div>
+  //     </Sidebar>
+  //   );
+  // }
 
   return (
     <Sidebar
@@ -360,7 +361,7 @@ export function AppSidebar({
                                 className="block"
                               >
                                 <div className="flex w-full justify-between gap-4 border-b pl-6 p-4 last:border-b-0 hover:bg-sidebar-accent rounded-lg">
-                                  <span className="text-sm line-clamp-2">
+                                  <span className="text-sm line-clamp-2 flex-1">
                                     {template.name}
                                   </span>
                                   <span className="text-sm line-clamp-2">

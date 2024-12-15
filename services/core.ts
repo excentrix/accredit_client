@@ -8,6 +8,12 @@ export const academicYearServices = {
 
   fetchCurrentAcademicYear: () =>
     api.get("/api/academic-years/current").then((res) => res.data),
+  createAcademicYear: (data: any) =>
+    api.post("/api/academic-years/", data).then((res) => res.data),
+  updateAcademicYear: (id: number, data: any) =>
+    api.put(`/api/academic-years/${id}/`, data).then((res) => res.data),
+  deleteAcademicYear: (id: number) =>
+    api.delete(`/api/academic-years/${id}/`).then((res) => res.data),
 };
 
 export const criteriaServices = {
@@ -26,6 +32,21 @@ export const boardServices = {
 
   fetchBoardTemplates: (boardCode: string) =>
     api.get(`/api/boards/${boardCode}/templates/`).then((res) => res.data),
+
+  createBoard: async (data: any) => {
+    const response = await api.post("/boards", data);
+    return response.data;
+  },
+
+  updateBoard: async (id: number, data: any) => {
+    const response = await api.put(`/boards/${id}`, data);
+    return response.data;
+  },
+
+  deleteBoard: async (id: number) => {
+    const response = await api.delete(`/boards/${id}`);
+    return response.data;
+  },
 };
 export const templateServices = {
   fetchTemplates: (params: any) =>
