@@ -228,7 +228,7 @@ export default function DashboardPage() {
         className="flex items-center gap-4 border-b py-4 last:border-0"
       >
         <div className="flex-shrink-0">
-          <ActivityIcon activity={activity.action} />
+          <ActivityIcon action={activity.action} />
         </div>
 
         <div className="flex-1 min-w-0">
