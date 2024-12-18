@@ -157,8 +157,8 @@ export default function ExportPage() {
 
       // Generate filename
       const date = new Date().toISOString().split("T")[0];
-      const filename = `${type === "all" ? "all_" : ""}${
-        type === "criterion" ? `_${params?.criterion}` : ""
+      const filename = `${type === "all" ? "all_" : ""}${selectedBoard}_${
+        type === "criterion" ? `${params?.criterion}` : ""
       }${type === "template" ? `_${params?.template_code}` : ""}_${
         currentAcademicYear.name
       }.xlsx`;
