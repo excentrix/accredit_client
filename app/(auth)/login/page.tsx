@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && user && !isLoading) {
-      router.replace("/dashboard");
+      router.push("/dashboard");
     }
   }, [isAuthenticated, user, isLoading, router]);
 
@@ -30,9 +30,7 @@ export default function LoginPage() {
     try {
       const success = await login(email, password);
       if (success) {
-        // Wait for a brief moment to ensure state updates are processed
-        await new Promise(resolve => setTimeout(resolve, 100));
-        await router.replace("/dashboard");
+        await router.push("/dashboard");
       }
     } finally {
       setIsSubmitting(false);
