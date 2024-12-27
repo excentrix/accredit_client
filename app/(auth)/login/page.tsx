@@ -16,29 +16,38 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading && user) {
-      console.log("redirecting to dashboard");
-      router.push("/dashboard");
+    if (isAuthenticated && user && !isLoading) {
+      router.replace("/dashboard");
     }
-  }, [isAuthenticated, isLoading, router, user]);
+  }, [isAuthenticated, user, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await login(email, password);
-    if (success) {
-      router.push("/dashboard");
+    setIsSubmitting(true);
+    try {
+      const success = await login(email, password);
+      if (success) {
+        // Wait for a brief moment to ensure state updates are processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await router.replace("/dashboard");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  // If still loading auth state, show loading spinner
-  if (isLoading) {
+
+  // If already authenticated, show loading state
+  if (isAuthenticated && user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
+
 
   // If already authenticated, don't show login form
   if (isAuthenticated) {
