@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       dispatch({ type: "AUTH_START" });
-
+  
       const response = await fetch(`${API_URL}/user/token/`, {
         method: "POST",
         headers: {
@@ -138,19 +138,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: "include",
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok && data.access && data.refresh) {
         setAuthCookies(data.access, data.refresh);
-        dispatch({ type: "AUTH_SUCCESS", payload: data.user });
-        return true;
+        
+        // Fetch user details immediately after successful login
+        const userDetails = await fetchUserDetails(data.access);
+        if (userDetails) {
+          dispatch({ type: "AUTH_SUCCESS", payload: userDetails });
+          return true;
+        } else {
+          throw new Error("Failed to fetch user details");
+        }
       } else {
         throw new Error(data.detail || "Login failed");
       }
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "An error occurred";
+      const message = error instanceof Error ? error.message : "An error occurred";
       dispatch({ type: "AUTH_FAILURE", payload: message });
       return false;
     }

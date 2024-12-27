@@ -234,11 +234,11 @@ export function AppSidebar({
       {...props}
     >
       {/* Primary Sidebar */}
-      <Sidebar collapsible="none" className="!w-[240px] border-r">
+      <Sidebar collapsible="none" className="!w-[255px] border-r ">
         <SidebarHeader className="border-b p-4">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild className="md:h-12">
+              <SidebarMenuButton size="lg" asChild className="md:h-10">
                 <Link href="/dashboard" className="flex items-center gap-3">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <Command className="size-4" />
@@ -299,6 +299,8 @@ export function AppSidebar({
             "[&:has([data-collapsed=true])]:min-w-[var(--collapsed-width)]"
           )}
         >
+
+          
           <SidebarHeader className="border-b p-4">
             <h2 className="text-lg font-semibold">
               {currentSidebarConfig.title}
@@ -382,5 +384,6 @@ export function AppSidebar({
         </Sidebar>
       )}
     </Sidebar>
+    
   );
 }
