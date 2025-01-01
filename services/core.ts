@@ -44,7 +44,7 @@ export const boardServices = {
   },
 
   deleteBoard: async (id: number) => {
-    const response = await api.delete(`/api/boards/${id}`);
+    const response = await api.delete(`/api/boards/${id}/`)
     return response.data;
   },
 };
