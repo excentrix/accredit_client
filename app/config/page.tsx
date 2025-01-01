@@ -137,17 +137,25 @@ export default function SettingsPage() {
     }
   };
 
+
   const onAcademicYearSubmit = async (data: AcademicYearFormValues) => {
+    const start_date = data.start_date;
+    const end_date = data.end_date;
+
+    // Construct the name dynamically and ensure it does not exceed 9 characters
+    let name = `${start_date ? new Date(start_date).getFullYear() : ""}` +
+      `${start_date && end_date ? "-" : ""}` +
+      `${end_date ? new Date(end_date).getFullYear() : ""}`.trim();
+
+    const formData = { ...data, name };
+
     const loadingToast = showToast.loading("Saving academic year...");
     try {
       if (editingAcademicYear) {
-        await academicYearServices.updateAcademicYear(
-          editingAcademicYear.id,
-          data
-        );
+        await academicYearServices.updateAcademicYear(editingAcademicYear.id, formData);
         showToast.success("Academic Year updated successfully");
       } else {
-        await academicYearServices.createAcademicYear(data);
+        await academicYearServices.createAcademicYear(formData);
         showToast.success("Academic Year created successfully");
       }
       setShowAcademicYearDialog(false);
@@ -188,6 +196,7 @@ export default function SettingsPage() {
       showToast.dismiss(loadingToast);
     }
   };
+
   return (
     <div className="container py-6">
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
@@ -229,11 +238,10 @@ export default function SettingsPage() {
               boards.map((board: any) => (
                 <Card
                   key={board.id}
-                  className={`${
-                    board.id === selectedBoard
-                      ? "border-green-300 border-2"
-                      : ""
-                  }`}
+                  className={`${board.id === selectedBoard
+                    ? "border-green-300 border-2"
+                    : ""
+                    }`}
                 >
                   <CardHeader>
                     <CardTitle>{board.name}</CardTitle>
@@ -294,11 +302,10 @@ export default function SettingsPage() {
               academicYears.map((year: any) => (
                 <Card
                   key={year.id}
-                  className={`w-fit ${
-                    year.id === selectedAcademicYear
-                      ? "border-green-300 border-2"
-                      : ""
-                  }`}
+                  className={`w-fit ${year.id === selectedAcademicYear
+                    ? "border-green-300 border-2"
+                    : ""
+                    }`}
                 >
                   <CardHeader>
                     <CardTitle>
@@ -386,6 +393,7 @@ export default function SettingsPage() {
                     <FormLabel>Name</FormLabel>
                     <FormControl>
                       <Input {...field} />
+          
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -400,6 +408,7 @@ export default function SettingsPage() {
                     <FormLabel>Code</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                      
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -412,12 +421,13 @@ export default function SettingsPage() {
                   variant="outline"
                   onClick={() => {
                     setShowBoardDialog(false);
-                    setEditingBoard(null);
-                    boardForm.reset();
+                    setEditingBoard(null);  // Reset the editing state
+                    boardForm.reset();      // Reset the form values
                   }}
                 >
                   Cancel
                 </Button>
+
                 <Button type="submit">
                   {boardForm.formState.isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -452,18 +462,44 @@ export default function SettingsPage() {
               onSubmit={academicYearForm.handleSubmit(onAcademicYearSubmit)}
               className="space-y-4"
             >
+             
+
               <FormField
                 control={academicYearForm.control}
                 name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const startDate = academicYearForm.getValues("start_date");
+                  const endDate = academicYearForm.getValues("end_date");
+
+                  const inputStyles: React.CSSProperties = {
+                    border: "1px solid #ccc",
+                    cursor: "not-allowed",
+                    backgroundColor: startDate && endDate ? "white" : "#f0f0f0",
+                    color: startDate && endDate ? "black" : "black",
+                    pointerEvents: (startDate && endDate) ? "auto" : "none",
+                  };
+
+                  return (
+                    <FormItem>
+                      <FormLabel style={{ color: "#a0a0a0" }}>Name</FormLabel>
+                      <FormControl style={{ backgroundColor: inputStyles.backgroundColor }}>
+                        <Input
+                          {...field}
+                          value={`${startDate
+                            ? new Date(startDate).getFullYear()
+                            : ""
+                            }${startDate && endDate ? `-${new Date(endDate).getFullYear()}` : ""
+                            }`.trim()}
+                          readOnly
+                          placeholder="Selected years will appear here"
+                          style={inputStyles}
+                          onFocus={(e) => e.target.blur()}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               <FormField
@@ -493,7 +529,25 @@ export default function SettingsPage() {
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        {...field}
+                        required
+                        onChange={(e) => {
+                          field.onChange(e); 
+                          const updatedValues = {
+                            ...academicYearForm.getValues(),
+                            start_date: e.target.value,
+                          };
+
+                          const startYear = new Date(updatedValues.start_date).getFullYear();
+                          const endYear = updatedValues.end_date
+                            ? new Date(updatedValues.end_date).getFullYear()
+                            : "";
+                          const name = `${startYear}${endYear ? `-${endYear}` : ""}`;
+                          academicYearForm.setValue("name", name);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -507,7 +561,26 @@ export default function SettingsPage() {
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        {...field}
+                        required
+                        onChange={(e) => {
+                          field.onChange(e); 
+                          const updatedValues = {
+                            ...academicYearForm.getValues(),
+                            end_date: e.target.value,
+                          };
+
+                          const startYear = updatedValues.start_date
+                            ? new Date(updatedValues.start_date).getFullYear()
+                            : "";
+                          const endYear = new Date(updatedValues.end_date).getFullYear();
+                          const name = `${startYear}${endYear ? `-${endYear}` : ""}`;
+
+                          academicYearForm.setValue("name", name); 
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

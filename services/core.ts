@@ -34,20 +34,21 @@ export const boardServices = {
     api.get(`/api/boards/${boardCode}/templates/`).then((res) => res.data),
 
   createBoard: async (data: any) => {
-    const response = await api.post("/boards", data);
+    const response = await api.post("/api/boards/", data);
     return response.data;
   },
 
   updateBoard: async (id: number, data: any) => {
-    const response = await api.put(`/boards/${id}`, data);
+    const response = await api.put(`/api/boards/${id}`, data);
     return response.data;
   },
 
   deleteBoard: async (id: number) => {
-    const response = await api.delete(`/boards/${id}`);
+    const response = await api.delete(`/api/boards/${id}/`)
     return response.data;
   },
 };
+
 export const templateServices = {
   fetchTemplates: (params: any) =>
     api.get(`/api/templates/`, { params }).then((res) => res.data),
