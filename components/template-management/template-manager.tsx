@@ -30,8 +30,8 @@ export function TemplateManager() {
     try {
       setIsLoading(true);
       const response = await templateServices.fetchTemplates({
-        board: selectedBoard,
-        academic_year: selectedAcademicYear,
+        // board: selectedBoard,
+        // academic_year: selectedAcademicYear,
       });
       setTemplates(response);
     } catch (error) {
