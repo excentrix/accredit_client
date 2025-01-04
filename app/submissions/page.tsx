@@ -32,12 +32,12 @@ export default function IQACSubmissionsPage() {
               Review and manage department submissions
             </p>
           </div>
-          <Button asChild>
-            <Link href="/submissions/all">
-              <ListIcon className="mr-2 h-4 w-4" />
-              View All Submissions
-            </Link>
-          </Button>
+            {/* <Link href="/submissions/all">
+              <Button>
+                <ListIcon className="mr-2 h-4 w-4" />
+                  View All Submissions
+              </Button>
+            </Link>    */}
         </div>
 
         <SubmissionList />

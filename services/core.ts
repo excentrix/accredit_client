@@ -184,13 +184,12 @@ export const submissionStatsServices = {
       params.append("status", filters.statusFilter);
     if (filters.departmentFilter && filters.departmentFilter !== "all")
       params.append("department", filters.departmentFilter);
-
-    // return api
-    //   .get(`/api/submissions/current_academic_year/?${params.toString()}`)
-    //   .then((res) => res);
+    
+    const queryString = params.toString();
     return api
-      .get(`/api/submissions/current_academic_year/`)
+      .get(`/api/submissions/current_academic_year/?${queryString}`)
       .then((res) => res.data);
+
   },
   fetchSubmissionById: (submissionId: string) =>
     api.get(`/api/submissions/${submissionId}/`).then((res) => res.data),
