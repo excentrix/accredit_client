@@ -166,7 +166,7 @@ export function SubmissionList() {
                   <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                 </TableCell>
               </TableRow>
-            ) : submissions?.length === 0 ? (
+            ) : (submissions && Array.isArray(submissions) && submissions.length === 0) ?  (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">

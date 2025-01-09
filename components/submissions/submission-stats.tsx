@@ -11,8 +11,7 @@ export function SubmissionStats() {
     queryKey: ["submission-stats"],
     queryFn: async () => {
       const response = await submissionStatsServices.fetchSubmissionStats();
-      
-      return response.data;
+      return response.data?.status_counts;
     },
   });
 

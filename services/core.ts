@@ -34,20 +34,21 @@ export const boardServices = {
     api.get(`/api/boards/${boardCode}/templates/`).then((res) => res.data),
 
   createBoard: async (data: any) => {
-    const response = await api.post("/boards", data);
+    const response = await api.post("/api/boards/", data);
     return response.data;
   },
 
   updateBoard: async (id: number, data: any) => {
-    const response = await api.put(`/boards/${id}`, data);
+    const response = await api.put(`/api/boards/${id}`, data);
     return response.data;
   },
 
   deleteBoard: async (id: number) => {
-    const response = await api.delete(`/boards/${id}`);
+    const response = await api.delete(`/api/boards/${id}/`)
     return response.data;
   },
 };
+
 export const templateServices = {
   fetchTemplates: (params: any) =>
     api.get(`/api/templates/`, { params }).then((res) => res.data),
@@ -95,7 +96,7 @@ export const templateSubmissionServices = {
   approveSubmission: (code: string, departmentId: any) =>
     api
       .post(`/api/templates/${code}/approve/`, { department: departmentId })
-      .then((res) => console.log("bro", res.data)),
+      .then((res) =>  res.data),
 
   rejectSubmission: (
     code: string,
@@ -183,13 +184,12 @@ export const submissionStatsServices = {
       params.append("status", filters.statusFilter);
     if (filters.departmentFilter && filters.departmentFilter !== "all")
       params.append("department", filters.departmentFilter);
-
-    // return api
-    //   .get(`/api/submissions/current_academic_year/?${params.toString()}`)
-    //   .then((res) => res);
+    
+    const queryString = params.toString();
     return api
-      .get(`/api/submissions/current_academic_year/`)
+      .get(`/api/submissions/current_academic_year/?${queryString}`)
       .then((res) => res.data);
+
   },
   fetchSubmissionById: (submissionId: string) =>
     api.get(`/api/submissions/${submissionId}/`).then((res) => res.data),

@@ -41,16 +41,16 @@ export function SubmissionReview({
     try {
       console.log(templateCode, departmentId);
 
-      // const response = await templateSubmissionServices.approveSubmission(
-      //   templateCode,
-      //   departmentId
-      // );
+      const response = await templateSubmissionServices.approveSubmission(
+        templateCode,
+        departmentId
+      );
 
-      // if (response.status === "success") {
-      //   showToast.dismiss(loadingToast);
-      //   showToast.success("Submission approved successfully");
-      //   onReviewComplete();
-      // }
+      if (response.status === "success") {
+        showToast.dismiss(loadingToast);
+        showToast.success("Submission approved successfully");
+        onReviewComplete();
+      }
     } catch (error: any) {
       showToast.dismiss(loadingToast);
       showToast.error(

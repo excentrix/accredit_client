@@ -40,7 +40,7 @@ api.interceptors.request.use(
 
       config.params = {
         ...config.params,
-        board: boardId ? parseInt(boardId, 10) : undefined,
+        board_id: boardId ? parseInt(boardId, 10) : undefined,
         academic_year: academicYearId
           ? parseInt(academicYearId, 10)
           : undefined,
