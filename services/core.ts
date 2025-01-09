@@ -96,7 +96,7 @@ export const templateSubmissionServices = {
   approveSubmission: (code: string, departmentId: any) =>
     api
       .post(`/api/templates/${code}/approve/`, { department: departmentId })
-      .then((res) => console.log("bro", res.data)),
+      .then((res) =>  res.data),
 
   rejectSubmission: (
     code: string,
