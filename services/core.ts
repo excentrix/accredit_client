@@ -50,8 +50,8 @@ export const boardServices = {
 };
 
 export const templateServices = {
-  fetchTemplates: (params: any) =>
-    api.get(`/api/templates/`, { params }).then((res) => res.data),
+  fetchTemplates: () =>
+    api.get(`/api/templates/`).then((res) => res.data),
 
   fetchTemplate: (code: string) =>
     api.get(`/api/templates/${code}/`).then((res) => res.data),

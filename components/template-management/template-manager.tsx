@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, FileDown, FileUp } from "lucide-react";
-
+import { useQuery } from "@tanstack/react-query";
 import { Template } from "@/types/template";
 import { useSettings } from "@/context/settings-context";
 import { useRouter } from "next/navigation";
@@ -21,29 +21,23 @@ import { templateServices } from "@/services/core";
 
 export function TemplateManager() {
   const { selectedBoard, selectedAcademicYear } = useSettings();
-
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const fetchTemplates = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await templateServices.fetchTemplates({
-        // board: selectedBoard,
-        // academic_year: selectedAcademicYear,
-      });
-      setTemplates(response);
-    } catch (error) {
-      showToast.error("Failed to fetch templates");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedBoard, selectedAcademicYear]);
-
+  const { data: templates = [], isLoading, refetch } = useQuery<Template[]>({
+    queryKey: ["templates_info", selectedBoard, selectedAcademicYear],
+    queryFn: async () => {
+      const response = await templateServices.fetchTemplates();
+      return response || [];
+    },
+    enabled: false, // Prevent automatic fetching
+  });
+  
   useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
+    if (selectedBoard && selectedAcademicYear) {
+      refetch(); // Trigger fetch when dependencies are ready
+    }
+  }, [selectedBoard, selectedAcademicYear, refetch]);
+  
 
   const handleEdit = (template: Template) => {
     router.push(`/template-management/edit?code=${template.code}`);
@@ -55,7 +49,7 @@ export function TemplateManager() {
     try {
       await templateServices.deleteTemplate(template.code);
       showToast.success("Template deleted successfully");
-      fetchTemplates();
+      refetch();
     } catch (error) {
       showToast.error("Failed to delete template");
     }
@@ -94,7 +88,7 @@ export function TemplateManager() {
               <TableHead>Name</TableHead>
               {/* <TableHead>Description</TableHead> */}
               <TableHead>Sections</TableHead>
-              <TableHead>Fields</TableHead>
+              {/* <TableHead>Fields</TableHead> */}
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>

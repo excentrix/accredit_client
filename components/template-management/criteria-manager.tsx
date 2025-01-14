@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
-
+import { useQuery } from "@tanstack/react-query";
 import { showToast } from "@/lib/toast";
 import { criteriaServices } from "@/services/core";
+import { useSettings } from "@/context/settings-context";
 
 interface Criterion {
   id: number;
@@ -24,30 +25,41 @@ interface Criterion {
 }
 
 export function CriteriaManager() {
-  const [criteria, setCriteria] = useState<Criterion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [criteria, setCriteria] = useState<Criterion[]>([]);
+  // const [isLoading, setIsLoading] = useState(true);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(
     null
   );
+  const { selectedBoard, selectedAcademicYear } = useSettings();
   const [showDialog, setShowDialog] = useState(false);
 
-  const fetchCriteria = async () => {
-    try {
-      setIsLoading(true);
+  // const fetchCriteria = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     const response = await criteriaServices.fetchCriteriaList();
+  //     setCriteria(response);
+  //   } catch (error) {
+  //     showToast.error("Failed to fetch criteria");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchCriteria();
+  // }, []);
+
+  const {
+    data: criteria = [],
+    isLoading,
+  } = useQuery<Criterion[]>({
+    queryKey: ["criteria_list", selectedBoard, selectedAcademicYear],
+    queryFn: async () => {
       const response = await criteriaServices.fetchCriteriaList();
-      setCriteria(response);
-    } catch (error) {
-      showToast.error("Failed to fetch criteria");
-    } finally {
-      setIsLoading(false);
+      return response;
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchCriteria();
-  }, []);
-
-  console.log(criteria);
 
   return (
     <div className="space-y-4">

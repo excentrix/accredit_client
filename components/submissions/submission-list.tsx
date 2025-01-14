@@ -32,6 +32,7 @@ import { SubmissionStats } from "./submission-stats";
 import { useRouter } from "next/navigation";
 import { submissionStatsServices } from "@/services/core";
 import userManagementService from "@/services/user_management";
+import { useSettings } from "@/context/settings-context";
 
 const statusColors = {
   draft: "bg-gray-500",
@@ -62,7 +63,7 @@ export function SubmissionList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [departments, setDepartments] = useState<any[]>([]);
-
+  const { selectedBoard, selectedAcademicYear } = useSettings();
   const router = useRouter();
 
   const handleReviewClick = (submissionId: string) => {
@@ -89,7 +90,7 @@ export function SubmissionList() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["submissions", searchQuery, statusFilter, departmentFilter],
+    queryKey: ["submissions", searchQuery, statusFilter, departmentFilter, selectedBoard, selectedAcademicYear],
     queryFn: async () => {
       const response =
         await submissionStatsServices.fetchCurrentAcademicYearSubmissions({
