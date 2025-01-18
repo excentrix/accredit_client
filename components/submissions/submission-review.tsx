@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { showToast } from "@/lib/toast";
 import { templateSubmissionServices } from "@/services/core";
+import { useRouter } from "next/navigation";
 
 interface SubmissionReviewProps {
   templateCode: Template["code"];
@@ -33,6 +34,11 @@ export function SubmissionReview({
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const handleReviewClick = (submissionId: string) => {
+    router.push(`/submissions/${submissionId}`);
+  };
 
   const handleApprove = async () => {
     setIsSubmitting(true);
@@ -98,7 +104,7 @@ export function SubmissionReview({
     <div className="space-y-4">
       <div className="flex gap-4">
         <Button
-          onClick={handleApprove}
+          onClick={() => handleReviewClick(submission.id.toString())}
           disabled={isSubmitting || submission.status !== "submitted"}
           className="bg-green-600 hover:bg-green-700"
         >
@@ -107,10 +113,10 @@ export function SubmissionReview({
           ) : (
             <CheckCircle className="mr-2 h-4 w-4" />
           )}
-          Approve
+          Review
         </Button>
 
-        <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        {/* <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
           <DialogTrigger asChild>
             <Button
               variant="destructive"
@@ -152,7 +158,7 @@ export function SubmissionReview({
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
     </div>
   );

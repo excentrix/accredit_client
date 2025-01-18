@@ -15,6 +15,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 
 import { showToast } from "@/lib/toast";
 import { criteriaServices } from "@/services/core";
+import { useSettings } from "@/context/settings-context";
 
 interface Criterion {
   id: number;
@@ -30,11 +31,17 @@ export function CriteriaManager() {
     null
   );
   const [showDialog, setShowDialog] = useState(false);
+  const { selectedBoard, selectedAcademicYear } = useSettings(); // Fetch current board and year from the context
 
-  const fetchCriteria = async () => {
+  const fetchCriteria = async (boardId: string, yearId: string) => {
     try {
       setIsLoading(true);
-      const response = await criteriaServices.fetchCriteriaList();
+      const response = await criteriaServices.fetchCriteriaList(
+        {
+          board: boardId,
+          year: yearId,
+        }
+      );
       setCriteria(response);
     } catch (error) {
       showToast.error("Failed to fetch criteria");
@@ -44,10 +51,12 @@ export function CriteriaManager() {
   };
 
   useEffect(() => {
-    fetchCriteria();
-  }, []);
+    if (selectedBoard && selectedAcademicYear) {
+      fetchCriteria(selectedBoard.toString(), selectedAcademicYear.toString());
+    }
+  }, [selectedBoard, selectedAcademicYear]); 
 
-  console.log(criteria);
+  // console.log(criteria);
 
   return (
     <div className="space-y-4">
