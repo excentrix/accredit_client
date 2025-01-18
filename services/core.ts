@@ -17,14 +17,27 @@ export const academicYearServices = {
 };
 
 export const criteriaServices = {
-  fetchCriteriaList: (params?: any) =>
-    api.get(`/api/criteria/list/`, { params }).then((res) => {
-      console.log("first", res);
+  fetchCriteriaList: async (params?: any) => {
+    try {
+      const res = await api
+        .get(`/api/criteria/list/`, { params: params || {} }); // Ensure params is an empty object if undefined
       return res.data;
-    }),
+    } catch (error) {
+      console.error("Error fetching criteria list:", error);
+      throw new Error("Failed to fetch criteria list.");
+    }
+  },
 
-  fetchBoardCriteria: (boardCode: string) =>
-    api.get(`/api/boards/${boardCode}/criteria/`).then((res) => res.data),
+  fetchBoardCriteria: async (boardCode: string) => {
+    try {
+      const res = await api
+        .get(`/api/boards/${boardCode}/criteria/`);
+      return res.data;
+    } catch (error) {
+      console.error(`Error fetching criteria for board ${boardCode}:`, error);
+      throw new Error(`Failed to fetch criteria for board ${boardCode}.`);
+    }
+  },
 };
 
 export const boardServices = {
@@ -196,7 +209,7 @@ export const submissionStatsServices = {
   approveSubmission: (submissionId: string) =>
     api
       .post(`/api/submissions/${submissionId}/approve/`)
-      .then((res) => console.log("bro", res.data)),
+      .then((res) =>  res.data),
 
   // Reject a submission
   rejectSubmission: (submissionId: string, reason: string) =>

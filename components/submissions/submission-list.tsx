@@ -157,7 +157,7 @@ export function SubmissionList() {
               <TableHead>Status</TableHead>
               <TableHead>Submitted By</TableHead>
               <TableHead>Submitted At</TableHead>
-              <TableHead className="text-left">Actions</TableHead>
+              <TableHead className="text-left">Verification</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -183,7 +183,7 @@ export function SubmissionList() {
                 <TableRow
                   key={submission.id}
                   className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleReviewClick(submission.id.toString())}
+                  // onClick={() => handleReviewClick(submission.id.toString())}
                 >
                   <TableCell>{submission.template_code}</TableCell>
                   <TableCell>{submission.department_name}</TableCell>

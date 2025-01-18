@@ -550,6 +550,7 @@ export function SubmissionReview({ submissionId }: SubmissionReviewProps) {
               variant="default"
               onClick={() => handleApprove(submissionId, refetch)}
               disabled={submission.status !== "submitted"}
+              className="bg-green-600 hover:bg-green-700"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
               Approve

@@ -49,17 +49,15 @@ export function CriteriaManager() {
   //   fetchCriteria();
   // }, []);
 
+  // console.log(criteria);
+
   const {
     data: criteria = [],
     isLoading,
   } = useQuery<Criterion[]>({
-    queryKey: ["criteria_list", selectedBoard, selectedAcademicYear],
-    queryFn: async () => {
-      const response = await criteriaServices.fetchCriteriaList();
-      return response;
-    }
+    queryKey: ["criteria", selectedAcademicYear, selectedBoard],
+    queryFn: () => criteriaServices.fetchCriteriaList(),
   });
-
 
   return (
     <div className="space-y-4">
