@@ -122,6 +122,8 @@ export default function ExportPage() {
       template_code?: string;
     }
   ) => {
+    let loadingToast: string | undefined; // Define loadingToast outside the try block
+
     try {
       if (!currentAcademicYear?.id) {
         toast.error("No academic year selected");
@@ -134,7 +136,7 @@ export default function ExportPage() {
       }
 
       setIsExporting(true);
-      const loadingToast = toast.loading("Generating Excel file...");
+      loadingToast = toast.loading("Generating Excel file...");
 
       const queryParams = new URLSearchParams({
         type,
@@ -169,12 +171,19 @@ export default function ExportPage() {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.dismiss(loadingToast);
-      toast.success("Export completed successfully!");
-    } catch (error: any) {
-      console.error("Export error:", error);
+      toast.dismiss(loadingToast);  
+      if (response.error) {
+        toast.error(response.error);
+        return;
+      }
 
+      toast.success("Export completed successfully!");
+    } 
+    catch (error: any) {
+      console.error("Export error:", error);
       // Try to read error message from response
+      toast.dismiss(loadingToast);
+
       if (error.response?.data instanceof Blob) {
         const reader = new FileReader();
         reader.onload = () => {
