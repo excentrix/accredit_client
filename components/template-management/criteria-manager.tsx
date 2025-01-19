@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
-
-import { showToast } from "@/lib/toast";
+import { useQuery } from "@tanstack/react-query";
+// import { showToast } from "@/lib/toast";
+import toast from "react-hot-toast";
 import { criteriaServices } from "@/services/core";
 import { useSettings } from "@/context/settings-context";
 
@@ -25,38 +26,36 @@ interface Criterion {
 }
 
 export function CriteriaManager() {
-  const [criteria, setCriteria] = useState<Criterion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(
     null
   );
   const [showDialog, setShowDialog] = useState(false);
-  const { selectedBoard, selectedAcademicYear } = useSettings(); // Fetch current board and year from the context
+  const { selectedBoard, selectedAcademicYear } = useSettings();
 
-  const fetchCriteria = async (boardId: string, yearId: string) => {
-    try {
-      setIsLoading(true);
-      const response = await criteriaServices.fetchCriteriaList(
-        {
-          board: boardId,
-          year: yearId,
-        }
-      );
-      setCriteria(response);
-    } catch (error) {
-      showToast.error("Failed to fetch criteria");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: criteria = [], isLoading } = useQuery({
+    queryKey: ["criteria", selectedBoard, selectedAcademicYear],
+    queryFn: async () => {
+      if (!selectedBoard || !selectedAcademicYear) {
+        toast.error("Board or Academic Year is missing.");
+        throw new Error("Board or Academic Year is missing."); 
+      }
 
-  useEffect(() => {
-    if (selectedBoard && selectedAcademicYear) {
-      fetchCriteria(selectedBoard.toString(), selectedAcademicYear.toString());
-    }
-  }, [selectedBoard, selectedAcademicYear]); 
+      try {
+        const response = await criteriaServices.fetchCriteriaList({
+          board_id: selectedBoard.toString(),
+          academic_year: selectedAcademicYear.toString(),
+        });
+        toast.success("Criteria is fetched successfully.");
+        return response;
+      } catch (error) {
+        toast.error("Failed to fetch criteria.");
+        throw new Error("Failed to fetch criteria data.");
+      }
+    },
+    enabled: !!selectedBoard && !!selectedAcademicYear, 
+  });
 
-  // console.log(criteria);
+
 
   return (
     <div className="space-y-4">
@@ -100,7 +99,7 @@ export function CriteriaManager() {
                 </TableCell>
               </TableRow>
             ) : (
-              criteria?.map((criterion) => (
+              criteria?.map((criterion: Criterion) => (
                 <TableRow key={criterion.id}>
                   <TableCell className="font-medium">
                     {criterion.number}
