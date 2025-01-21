@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, ListChecks, Clock, CheckCircle, XCircle } from "lucide-react";
 import { submissionStatsServices } from "@/services/core";
+import { useSettings } from "@/context/settings-context";
+
 
 export function SubmissionStats() {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ["submission-stats"],
+  const { selectedBoard, selectedAcademicYear } = useSettings();
+  const { data: stats, isLoading} = useQuery({
+    queryKey: ["submission-stats", selectedBoard, selectedAcademicYear],
     queryFn: async () => {
       const response = await submissionStatsServices.fetchSubmissionStats();
       return response.data?.status_counts;

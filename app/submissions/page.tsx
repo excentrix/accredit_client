@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ListIcon } from "lucide-react";
 import { academicYearServices } from "@/services/core";
+import { useSettings } from "@/context/settings-context";
+
 
 export default function IQACSubmissionsPage() {
+  const { selectedBoard, selectedAcademicYear } = useSettings();
   const { data: currentYear, isLoading } = useQuery({
-    queryKey: ["current-academic-year"],
+    queryKey: ["current-academic-year", selectedBoard, selectedAcademicYear],
     queryFn: async () => {
       const response = await academicYearServices.fetchCurrentAcademicYear();
       return response.data; // Access the nested data property

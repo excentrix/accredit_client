@@ -13,9 +13,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, FileSearch } from "lucide-react";
 import { showToast } from "@/lib/toast";
 import { templateSubmissionServices } from "@/services/core";
+import { useRouter } from "next/navigation";
 
 interface SubmissionReviewProps {
   templateCode: Template["code"];
@@ -33,84 +34,89 @@ export function SubmissionReview({
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
-  const handleApprove = async () => {
-    setIsSubmitting(true);
-    const loadingToast = showToast.loading("Approving submission...");
-
-    try {
-      console.log(templateCode, departmentId);
-
-      const response = await templateSubmissionServices.approveSubmission(
-        templateCode,
-        departmentId
-      );
-
-      if (response.status === "success") {
-        showToast.dismiss(loadingToast);
-        showToast.success("Submission approved successfully");
-        onReviewComplete();
-      }
-    } catch (error: any) {
-      showToast.dismiss(loadingToast);
-      showToast.error(
-        error.response?.data?.message || "Failed to approve submission"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleReviewClick = (submissionId: string) => {
+    router.push(`/submissions/${submissionId}`);
   };
 
-  const handleReject = async () => {
-    if (!rejectionReason.trim()) {
-      showToast.error("Please provide a reason for rejection");
-      return;
-    }
+  // const handleApprove = async () => {
+  //   setIsSubmitting(true);
+  //   const loadingToast = showToast.loading("Approving submission...");
 
-    setIsSubmitting(true);
-    const loadingToast = showToast.loading("Rejecting submission...");
+  //   try {
+  //     console.log(templateCode, departmentId);
 
-    try {
-      const response = await templateSubmissionServices.rejectSubmission(
-        templateCode,
-        departmentId,
-        rejectionReason
-      );
+  //     const response = await templateSubmissionServices.approveSubmission(
+  //       templateCode,
+  //       departmentId
+  //     );
 
-      if (response.status === "success") {
-        showToast.dismiss(loadingToast);
-        showToast.success("Submission rejected successfully");
-        setIsRejectDialogOpen(false);
-        setRejectionReason("");
-        onReviewComplete();
-      }
-    } catch (error: any) {
-      showToast.dismiss(loadingToast);
-      showToast.error(
-        error.response?.data?.message || "Failed to reject submission"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     if (response.status === "success") {
+  //       showToast.dismiss(loadingToast);
+  //       showToast.success("Submission approved successfully");
+  //       onReviewComplete();
+  //     }
+  //   } catch (error: any) {
+  //     showToast.dismiss(loadingToast);
+  //     showToast.error(
+  //       error.response?.data?.message || "Failed to approve submission"
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  // const handleReject = async () => {
+  //   if (!rejectionReason.trim()) {
+  //     showToast.error("Please provide a reason for rejection");
+  //     return;
+  //   }
+
+  //   setIsSubmitting(true);
+  //   const loadingToast = showToast.loading("Rejecting submission...");
+
+  //   try {
+  //     const response = await templateSubmissionServices.rejectSubmission(
+  //       templateCode,
+  //       departmentId,
+  //       rejectionReason
+  //     );
+
+  //     if (response.status === "success") {
+  //       showToast.dismiss(loadingToast);
+  //       showToast.success("Submission rejected successfully");
+  //       setIsRejectDialogOpen(false);
+  //       setRejectionReason("");
+  //       onReviewComplete();
+  //     }
+  //   } catch (error: any) {
+  //     showToast.dismiss(loadingToast);
+  //     showToast.error(
+  //       error.response?.data?.message || "Failed to reject submission"
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   return (
     <div className="space-y-4">
       <div className="flex gap-4">
         <Button
-          onClick={handleApprove}
+          onClick={() => handleReviewClick(submission.id.toString())}
           disabled={isSubmitting || submission.status !== "submitted"}
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-blue-500 hover:bg-blue-600"
         >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <CheckCircle className="mr-2 h-4 w-4" />
+            <FileSearch className="mr-2 h-4 w-4" />
           )}
-          Approve
+          Review
         </Button>
 
-        <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        {/* <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
           <DialogTrigger asChild>
             <Button
               variant="destructive"
@@ -152,7 +158,7 @@ export function SubmissionReview({
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
     </div>
   );

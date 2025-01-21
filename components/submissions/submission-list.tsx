@@ -32,6 +32,7 @@ import { SubmissionStats } from "./submission-stats";
 import { useRouter } from "next/navigation";
 import { submissionStatsServices } from "@/services/core";
 import userManagementService from "@/services/user_management";
+import { useSettings } from "@/context/settings-context";
 
 const statusColors = {
   draft: "bg-gray-500",
@@ -62,7 +63,7 @@ export function SubmissionList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [departments, setDepartments] = useState<any[]>([]);
-
+  const { selectedBoard, selectedAcademicYear } = useSettings();
   const router = useRouter();
 
   const handleReviewClick = (submissionId: string) => {
@@ -89,7 +90,7 @@ export function SubmissionList() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["submissions", searchQuery, statusFilter, departmentFilter],
+    queryKey: ["submissions", searchQuery, statusFilter, departmentFilter, selectedBoard, selectedAcademicYear],
     queryFn: async () => {
       const response =
         await submissionStatsServices.fetchCurrentAcademicYearSubmissions({
@@ -156,7 +157,7 @@ export function SubmissionList() {
               <TableHead>Status</TableHead>
               <TableHead>Submitted By</TableHead>
               <TableHead>Submitted At</TableHead>
-              <TableHead className="text-left">Actions</TableHead>
+              <TableHead className="text-left">Verification</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -182,7 +183,7 @@ export function SubmissionList() {
                 <TableRow
                   key={submission.id}
                   className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleReviewClick(submission.id.toString())}
+                  // onClick={() => handleReviewClick(submission.id.toString())}
                 >
                   <TableCell>{submission.template_code}</TableCell>
                   <TableCell>{submission.department_name}</TableCell>

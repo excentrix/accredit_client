@@ -84,10 +84,10 @@ export default function ExportPage() {
     queryKey: ["templates", selectedBoard, selectedCriterion],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedBoard) params.append("board", selectedBoard.toString());
-      if (selectedCriterion) params.append("criterion", selectedCriterion);
-
-      const response = await templateServices.fetchTemplates(params);
+      // if (selectedBoard) params.append("board", selectedBoard.toString());
+      // if (selectedCriterion) params.append("criterion", selectedCriterion);
+      
+      const response = await templateServices.fetchTemplates();
       return response;
     },
     enabled: !!selectedBoard, // Only fetch when board is selected

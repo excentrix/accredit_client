@@ -40,7 +40,7 @@ import { submissionStatsServices } from "@/services/core";
 import { useSettings } from "@/context/settings-context";
 
 export function DepartmentBreakdown() {
-  const { selectedAcademicYear, isLoading: isLoadingYears } = useSettings();
+  const { selectedBoard, selectedAcademicYear, isLoading: isLoadingYears } = useSettings();
 
   const router = useRouter();
 
@@ -54,7 +54,7 @@ export function DepartmentBreakdown() {
     isLoading: isLoadingBreakdown,
     error,
   } = useQuery({
-    queryKey: ["department-breakdown", selectedAcademicYear],
+    queryKey: ["department-breakdown", selectedAcademicYear, selectedBoard],
     queryFn: async () => {
       const response = await submissionStatsServices.fetchDepartmentBreakdown(
         selectedAcademicYear
