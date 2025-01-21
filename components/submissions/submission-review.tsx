@@ -40,65 +40,65 @@ export function SubmissionReview({
     router.push(`/submissions/${submissionId}`);
   };
 
-  const handleApprove = async () => {
-    setIsSubmitting(true);
-    const loadingToast = showToast.loading("Approving submission...");
+  // const handleApprove = async () => {
+  //   setIsSubmitting(true);
+  //   const loadingToast = showToast.loading("Approving submission...");
 
-    try {
-      console.log(templateCode, departmentId);
+  //   try {
+  //     console.log(templateCode, departmentId);
 
-      const response = await templateSubmissionServices.approveSubmission(
-        templateCode,
-        departmentId
-      );
+  //     const response = await templateSubmissionServices.approveSubmission(
+  //       templateCode,
+  //       departmentId
+  //     );
 
-      if (response.status === "success") {
-        showToast.dismiss(loadingToast);
-        showToast.success("Submission approved successfully");
-        onReviewComplete();
-      }
-    } catch (error: any) {
-      showToast.dismiss(loadingToast);
-      showToast.error(
-        error.response?.data?.message || "Failed to approve submission"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     if (response.status === "success") {
+  //       showToast.dismiss(loadingToast);
+  //       showToast.success("Submission approved successfully");
+  //       onReviewComplete();
+  //     }
+  //   } catch (error: any) {
+  //     showToast.dismiss(loadingToast);
+  //     showToast.error(
+  //       error.response?.data?.message || "Failed to approve submission"
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
-  const handleReject = async () => {
-    if (!rejectionReason.trim()) {
-      showToast.error("Please provide a reason for rejection");
-      return;
-    }
+  // const handleReject = async () => {
+  //   if (!rejectionReason.trim()) {
+  //     showToast.error("Please provide a reason for rejection");
+  //     return;
+  //   }
 
-    setIsSubmitting(true);
-    const loadingToast = showToast.loading("Rejecting submission...");
+  //   setIsSubmitting(true);
+  //   const loadingToast = showToast.loading("Rejecting submission...");
 
-    try {
-      const response = await templateSubmissionServices.rejectSubmission(
-        templateCode,
-        departmentId,
-        rejectionReason
-      );
+  //   try {
+  //     const response = await templateSubmissionServices.rejectSubmission(
+  //       templateCode,
+  //       departmentId,
+  //       rejectionReason
+  //     );
 
-      if (response.status === "success") {
-        showToast.dismiss(loadingToast);
-        showToast.success("Submission rejected successfully");
-        setIsRejectDialogOpen(false);
-        setRejectionReason("");
-        onReviewComplete();
-      }
-    } catch (error: any) {
-      showToast.dismiss(loadingToast);
-      showToast.error(
-        error.response?.data?.message || "Failed to reject submission"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     if (response.status === "success") {
+  //       showToast.dismiss(loadingToast);
+  //       showToast.success("Submission rejected successfully");
+  //       setIsRejectDialogOpen(false);
+  //       setRejectionReason("");
+  //       onReviewComplete();
+  //     }
+  //   } catch (error: any) {
+  //     showToast.dismiss(loadingToast);
+  //     showToast.error(
+  //       error.response?.data?.message || "Failed to reject submission"
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   return (
     <div className="space-y-4">

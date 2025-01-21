@@ -165,10 +165,7 @@ export function AppSidebar({
   } = useQuery<Template[]>({
     queryKey: ["templates", selectedBoard, selectedAcademicYear, user?.id],
     queryFn: async () => {
-      const response = await templateServices.fetchTemplates({
-        board: selectedBoard,
-        academic_year: selectedAcademicYear,
-      });
+      const response = await templateServices.fetchTemplates();
 
       if (Array.isArray(response)) {
         return response;
