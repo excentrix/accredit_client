@@ -3,7 +3,7 @@ import api from "./api";
 import { Role, Department, UserUpdateData } from "@/types/auth";
 import Cookies from "js-cookie";
 
-const userManagementService = {
+export const userManagementService = {
   // Authentication Endpoints
   login: async (email: string, password: string) => {
     const response = await api.post("/user/token/", { email, password });
@@ -32,8 +32,13 @@ const userManagementService = {
   },
 
   fetchCurrentUser: async () => {
-    const response = await api.get("/user/users/me/");
-    return response.data;
+    try {
+      const response = await api.get("/user/users/me/");
+      return response.data; // This should return the StandardResponse format
+    } catch (error) {
+      console.error('Fetch user error:', error);
+      throw error;
+    }
   },
 
   createUser: async (userData: {
@@ -307,4 +312,4 @@ export const auditServices = {
     api.get("/user/audit-logs/summary/", { params }).then((res) => res.data),
 };
 
-export default userManagementService;
+// export default userManagementService;

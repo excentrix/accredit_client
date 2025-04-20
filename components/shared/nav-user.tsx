@@ -65,6 +65,10 @@ export function NavUser({ user }: { user: User }) {
     }
   };
 
+  const handleAccount = () => {
+    router.push('/account'); // Navigate to account page
+  };
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -173,7 +177,7 @@ export function NavUser({ user }: { user: User }) {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAccount}>
                 <BadgeCheck className="mr-2 h-4 w-4" />
                 Account
               </DropdownMenuItem>
